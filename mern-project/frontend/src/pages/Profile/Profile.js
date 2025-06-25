@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from '../api/axios';
+import axios from '../../api/axios';
+import './Profile.scss'; // Đừng quên import file SCSS
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -54,27 +55,31 @@ const Profile = () => {
   if (loading) return <p>🔄 Đang tải thông tin người dùng...</p>;
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>👤 Thông tin tài khoản</h2>
-      <p><strong>Họ tên:</strong> {user.fullName}</p>
-      <p><strong>Email:</strong> {user.email}</p>
-      <p><strong>Số điện thoại:</strong> {user.phone}</p>
-      <p><strong>Địa chỉ:</strong> {user.address}</p>
-      <p><strong>Vai trò:</strong> {user.role}</p>
+    <div className="profile-container">
+      <h2 className="profile-header">
+        👤 Thông tin tài khoản
+      </h2>
+      <div className="profile-info">
+        <p><strong>Họ tên:</strong> {user.fullName}</p>
+        <p><strong>Email:</strong> {user.email}</p>
+        <p><strong>Số điện thoại:</strong> {user.phone}</p>
+        <p><strong>Địa chỉ:</strong> {user.address}</p>
+        <p><strong>Vai trò:</strong> {user.role}</p>
+      </div>
 
       {user.role === 'buyer' && (
-        <div style={{ marginTop: '20px' }}>
+        <div className="profile-button-container">
           {user.sellerRequest?.status === 'pending' ? (
-            <p style={{ color: 'orange' }}>⏳ Yêu cầu seller đang chờ duyệt</p>
+            <p className="status-pending">⏳ Yêu cầu seller đang chờ duyệt</p>
           ) : user.sellerRequest?.status === 'approved' ? (
-            <p style={{ color: 'green' }}>✅ Bạn đã được duyệt làm seller</p>
+            <p className="status-approved">✅ Bạn đã được duyệt làm seller</p>
           ) : (
-            <button onClick={handleRequestSeller}>📤 Gửi yêu cầu làm Seller</button>
+            <button className="profile-button" onClick={handleRequestSeller}>📤 Gửi yêu cầu làm Seller</button>
           )}
         </div>
       )}
 
-      {message && <p style={{ marginTop: '10px', color: 'blue' }}>{message}</p>}
+      {message && <p className="profile-message">{message}</p>}
     </div>
   );
 };

@@ -6,8 +6,9 @@ const { generateTokens } = require('../utils/token');
 // Đăng ký
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password) {
+    const { fullName, email, password, phone, address } = req.body;
+
+    if (!fullName || !email || !password) {
       return res.status(400).json({ error: 'Vui lòng điền đầy đủ thông tin' });
     }
 
@@ -18,9 +19,11 @@ const registerUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({
-      fullName: name,
+      fullName,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      phone,     // Lưu phone
+      address    // Lưu address
     });
 
     await newUser.save();
@@ -40,8 +43,10 @@ const registerUser = async (req, res) => {
       accessToken,
       user: {
         id: newUser._id,
-        name: newUser.fullName,
+        fullName: newUser.fullName,
         email: newUser.email,
+        phone: newUser.phone,  // Trả về phone
+        address: newUser.address,  // Trả về address
         role: newUser.role
       }
     });
@@ -84,7 +89,7 @@ const loginUser = async (req, res) => {
     // ✅ Ghi log kiểm tra dữ liệu phản hồi
     console.log('>> user trả về:', {
       id: user._id,
-      name: user.fullName,
+      fullName: user.fullName,
       email: user.email,
       role: user.role
     });
@@ -94,8 +99,10 @@ const loginUser = async (req, res) => {
       accessToken,
       user: {
         id: user._id,
-        name: user.fullName,
+        fullName: user.fullName,
         email: user.email,
+        phone: user.phone,  // Trả về phone
+        address: user.address,  // Trả về address
         role: user.role
       }
     });

@@ -3,14 +3,14 @@ const User = require('../models/User');
 const updateUser = async (req, res) => {
   try {
     const userId = req.user.id; // Lấy ID từ token
-    const { name, email } = req.body;
+    const { fullName, email } = req.body;
 
-    if (!name || !email)
+    if (!fullName || !email)
       return res.status(400).json({ error: 'Vui lòng điền đầy đủ thông tin' });
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { name, email },
+      { fullName, email },
       { new: true } // trả về document đã cập nhật
     );
 
@@ -18,7 +18,7 @@ const updateUser = async (req, res) => {
       message: 'Cập nhật thông tin thành công',
       user: {
         id: updatedUser._id,
-        name: updatedUser.name,
+        fullName: updatedUser.fullName,
         email: updatedUser.email
       }
     });
@@ -26,6 +26,7 @@ const updateUser = async (req, res) => {
     res.status(500).json({ error: 'Lỗi máy chủ' });
   }
 };
+
 
 
 const getBuyers = async (req, res) => {

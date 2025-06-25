@@ -3,9 +3,9 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  fullName: { type: String, required: true },           // 👈 tên người dùng
-  phone: { type: String },                               // 👈 số điện thoại
-  address: { type: String },                             // 👈 địa chỉ
+  fullName: { type: String, required: true },
+  phone: { type: String },  // Đảm bảo lưu số điện thoại
+  address: { type: String }, // Đảm bảo lưu địa chỉ
 
   role: {
     type: String,
