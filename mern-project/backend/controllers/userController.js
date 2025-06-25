@@ -27,4 +27,18 @@ const updateUser = async (req, res) => {
   }
 };
 
-module.exports = { updateUser };
+
+const getBuyers = async (req, res) => {
+  try {
+    const buyers = await User.find({ role: 'buyer' });
+    res.json({ buyers });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi server' });
+  }
+};
+
+module.exports = {
+  updateUser,
+  getBuyers
+};
+

@@ -10,21 +10,25 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     try {
       const res = await axios.post('/auth/login', { email, password });
-
-      // Lưu access token vào localStorage
+  
       localStorage.setItem('accessToken', res.data.accessToken);
-
+      localStorage.setItem('role', res.data.user.role); // ✅ Lưu role
+  
       setMessage('Đăng nhập thành công!');
-      
-      // Điều hướng đến trang profile
-      navigate('/profile');
+  
+      if (res.data.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/profile');
+      }
     } catch (err) {
       setMessage(err.response?.data?.error || 'Lỗi đăng nhập');
     }
   };
+  
 
   return (
     <div style={{ maxWidth: '400px', margin: '50px auto' }}>

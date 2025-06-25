@@ -17,17 +17,22 @@ const registerUser = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ name, email, password: hashedPassword });
+    const newUser = new User({
+      fullName: name,
+      email,
+      password: hashedPassword
+    });
+
     await newUser.save();
 
     const { accessToken, refreshToken } = generateTokens(newUser._id);
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: true, // dùng false nếu phát triển local không dùng HTTPS
+      secure: true,
       path: '/api/auth/refresh-token',
       sameSite: 'Strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày
+      maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
     res.status(201).json({
@@ -35,8 +40,9 @@ const registerUser = async (req, res) => {
       accessToken,
       user: {
         id: newUser._id,
-        name: newUser.name,
-        email: newUser.email
+        name: newUser.fullName,
+        email: newUser.email,
+        role: newUser.role
       }
     });
   } catch (err) {
@@ -48,6 +54,8 @@ const registerUser = async (req, res) => {
 // Đăng nhập
 const loginUser = async (req, res) => {
   try {
+    console.log('>> loginUser được gọi');
+
     const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).json({ error: 'Email và mật khẩu là bắt buộc' });
@@ -67,19 +75,28 @@ const loginUser = async (req, res) => {
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: true, // dùng false nếu phát triển local không dùng HTTPS
+      secure: true,
       path: '/api/auth/refresh-token',
       sameSite: 'Strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    // ✅ Ghi log kiểm tra dữ liệu phản hồi
+    console.log('>> user trả về:', {
+      id: user._id,
+      name: user.fullName,
+      email: user.email,
+      role: user.role
     });
 
     res.status(200).json({
       message: 'Login thành công',
-        accessToken,
+      accessToken,
       user: {
         id: user._id,
-        name: user.name,
-        email: user.email
+        name: user.fullName,
+        email: user.email,
+        role: user.role
       }
     });
   } catch (err) {
@@ -101,7 +118,7 @@ const refreshAccessToken = (req, res) => {
     }
 
     const accessToken = jwt.sign({ id: decoded.id }, process.env.JWT_SECRET, {
-      expiresIn: '15m',
+      expiresIn: '15m'
     });
 
     res.json({ accessToken });
@@ -111,5 +128,5 @@ const refreshAccessToken = (req, res) => {
 module.exports = {
   registerUser,
   loginUser,
-  refreshAccessToken,
+  refreshAccessToken
 };

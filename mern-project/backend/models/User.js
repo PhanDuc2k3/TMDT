@@ -1,4 +1,3 @@
-// models/User.js
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
@@ -7,8 +6,27 @@ const userSchema = new mongoose.Schema({
   fullName: { type: String, required: true },           // 👈 tên người dùng
   phone: { type: String },                               // 👈 số điện thoại
   address: { type: String },                             // 👈 địa chỉ
-  role: { type: String, enum: ['buyer', 'seller', 'admin'], default: 'buyer' },
-  store: { type: mongoose.Schema.Types.ObjectId, ref: 'Store' },
+
+  role: {
+    type: String,
+    enum: ['buyer', 'seller', 'admin'],
+    default: 'buyer'
+  },
+
+  store: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Store'
+  },
+
+  sellerRequest: {
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: null
+    },
+    requestedAt: Date
+  }
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
