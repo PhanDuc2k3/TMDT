@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const adminRoutes = require('./routes/adminRoutes');
+const storeRoutes = require('./routes/storeRoutes'); // ✅ thêm dòng này
 
 require('dotenv').config();
 
@@ -32,6 +33,7 @@ const userRoutes = require('./routes/userRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/store', storeRoutes); // ✅ thêm dòng này để route hoạt động
 
 // MongoDB + Start server
 const PORT = process.env.PORT || 5000;

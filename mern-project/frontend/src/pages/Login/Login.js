@@ -23,7 +23,7 @@ const Login = () => {
       if (res.data.user.role === 'admin') {
         navigate('/admin');
       } else {
-        navigate('/profile');
+        navigate('/');
       }
     } catch (err) {
       setMessage(err.response?.data?.error || 'Lỗi đăng nhập');
