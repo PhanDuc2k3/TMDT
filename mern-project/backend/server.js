@@ -2,42 +2,42 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const adminRoutes = require('./routes/adminRoutes');
-const storeRoutes = require('./routes/storeRoutes'); // ✅ thêm dòng này
-
-require('dotenv').config();
+const dotenv = require('dotenv');
 
 const app = express();
+dotenv.config();
 
-// Middlewares
-app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true
-}));
+// ✅ Cấu hình CORS đúng (chỉ dùng 1 lần DUY NHẤT)
+const corsOptions = {
+  origin: 'http://localhost:3000', // frontend
+  credentials: true,               // cho phép gửi cookie
+  optionSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
+// ✅ Middlewares
 app.use(express.json());
 app.use(cookieParser());
-app.use('/api/admin', adminRoutes);
 
-// Test route
+// ✅ Import routes
+const adminRoutes = require('./routes/adminRoutes');
+const storeRoutes = require('./routes/storeRoutes');
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
+
+// ✅ Load routes
+app.use('/api/admin', adminRoutes); 
+app.use('/api/store', storeRoutes); 
+app.use('/api/auth', authRoutes);   
+app.use('/api/user', userRoutes);
+
+// ✅ Route kiểm tra
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
 
-app.get('/api/test', (req, res) => {
-  res.json({ msg: 'Server OK' });
-});
-
-// Load routes
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
-
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/store', storeRoutes); // ✅ thêm dòng này để route hoạt động
-
-// MongoDB + Start server
+// ✅ Kết nối MongoDB và khởi động server
 const PORT = process.env.PORT || 5000;
-
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('✅ MongoDB connected');

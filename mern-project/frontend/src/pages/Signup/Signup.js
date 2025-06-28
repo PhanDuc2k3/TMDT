@@ -46,9 +46,11 @@ const Signup = () => {
     try {
       const res = await axios.post('/auth/signup', form, {
         headers: {
-          'Content-Type': 'application/json', // Đảm bảo gửi dữ liệu dưới dạng JSON
+          'Content-Type': 'application/json',
         },
+        withCredentials: true // ✅ thêm dòng này để cho phép gửi nhận cookie
       });
+      
   
       setMessage('Đăng ký thành công. Bạn có thể đăng nhập ngay!');
     } catch (err) {

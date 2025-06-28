@@ -8,50 +8,62 @@ const { isAdmin } = require('../middleware/role');
 // Admin lấy danh sách yêu cầu seller
 router.get('/seller-requests', verifyToken, isAdmin, async (req, res) => {
   try {
+    // Lấy danh sách người dùng có yêu cầu seller đang chờ duyệt
     const requests = await User.find({ 'sellerRequest.status': 'pending' }).select('-password');
+    if (!requests) {
+      return res.status(404).json({ error: 'Không có yêu cầu seller nào' });
+    }
     res.json({ requests });
   } catch (err) {
+    console.error('Lỗi khi lấy danh sách yêu cầu seller:', err);
     res.status(500).json({ error: 'Lỗi khi lấy danh sách yêu cầu seller' });
   }
 });
 
 // Admin duyệt seller
+// adminRoutes.js
 router.patch('/approve-seller/:userId', verifyToken, isAdmin, async (req, res) => {
   const { userId } = req.params;
-  const { storeName, storeDescription, logoUrl, category, rating, location, isActive } = req.body;
 
   try {
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ error: 'User không tồn tại' });
-
-    if (user.role !== 'buyer' || user.sellerRequest?.status !== 'pending') {
-      return res.status(400).json({ error: 'Không hợp lệ hoặc không có yêu cầu cần duyệt' });
+    if (!user) {
+      return res.status(404).json({ error: 'User không tồn tại' });
     }
 
-    // Tạo store mới với dữ liệu từ Seller
+    // Kiểm tra trạng thái yêu cầu seller
+    if (user.sellerRequest.status !== 'pending') {
+      return res.status(400).json({ error: 'Yêu cầu không hợp lệ hoặc đã được duyệt' });
+    }
+
+    // Tạo gian hàng từ thông tin trong sellerRequest
+    const storeData = user.sellerRequest.store;
     const store = new Store({
-      name: storeName || user.fullName + "'s Store", // Nếu không có tên gian hàng, dùng tên người dùng
-      description: storeDescription || '',  // Mô tả gian hàng
-      logoUrl: logoUrl || 'https://via.placeholder.com/150', // Nếu không có logo, sử dụng ảnh mặc định
-      category: category || 'Khác', // Nếu không có danh mục, mặc định là 'Khác'
-      rating: rating || 0, // Nếu không có đánh giá, mặc định là 0
-      location: location || 'Chưa cập nhật', // Nếu không có địa chỉ, mặc định là 'Chưa cập nhật'
-      owner: user._id, // Liên kết owner với user
-      isActive: isActive || true, // Trạng thái hoạt động của gian hàng
+      name: storeData.name,
+      description: storeData.description,
+      logoUrl: storeData.logoUrl,
+      category: storeData.category,
+      rating: storeData.rating,
+      location: storeData.location,
+      isActive: storeData.isActive,
+      owner: user._id  // Liên kết gian hàng với user
     });
 
-    await store.save();
+    await store.save();  // Lưu gian hàng vào cơ sở dữ liệu
 
-    // Cập nhật thông tin User
+    // Cập nhật user với gian hàng vừa tạo
     user.role = 'seller';
-    user.store = store._id; // Liên kết store với user
-    user.sellerRequest.status = 'approved';
-    await user.save();
+    user.store = store._id;  // Liên kết gian hàng với user
+    user.sellerRequest.status = 'approved';  // Cập nhật trạng thái yêu cầu thành 'approved'
+    await user.save();  // Lưu lại user với các thay đổi
 
-    // Trả về thông tin User và Store sau khi duyệt
-    const updatedUser = await User.findById(userId).populate('store');
-    res.json({ message: '✅ Seller đã được duyệt', user: updatedUser, store });
+    res.json({
+      message: '✅ Yêu cầu đã được duyệt, gian hàng đã được tạo.',
+      user,
+      store
+    });
   } catch (err) {
+    console.error('Lỗi khi duyệt seller:', err);
     res.status(500).json({ error: 'Lỗi server khi duyệt seller' });
   }
 });
@@ -62,8 +74,11 @@ router.patch('/reject-seller/:userId', verifyToken, isAdmin, async (req, res) =>
 
   try {
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ error: 'User không tồn tại' });
+    if (!user) {
+      return res.status(404).json({ error: 'User không tồn tại' });
+    }
 
+    // Kiểm tra vai trò và trạng thái yêu cầu seller
     if (user.role !== 'buyer' || user.sellerRequest?.status !== 'pending') {
       return res.status(400).json({ error: 'Không hợp lệ hoặc không có yêu cầu cần từ chối' });
     }
@@ -74,6 +89,7 @@ router.patch('/reject-seller/:userId', verifyToken, isAdmin, async (req, res) =>
 
     res.json({ message: '❌ Từ chối yêu cầu thành công' });
   } catch (err) {
+    console.error('Lỗi khi từ chối seller:', err);
     res.status(500).json({ error: 'Lỗi server khi từ chối seller' });
   }
 });

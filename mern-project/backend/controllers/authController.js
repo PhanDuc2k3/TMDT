@@ -3,33 +3,42 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { generateTokens } = require('../utils/token');
 
-// Đăng ký
+// Đăng ký người dùng mới
 const registerUser = async (req, res) => {
   try {
     const { fullName, email, password, phone, address } = req.body;
 
+    // Kiểm tra thông tin đăng ký
     if (!fullName || !email || !password) {
       return res.status(400).json({ error: 'Vui lòng điền đầy đủ thông tin' });
     }
 
+    // Kiểm tra xem email đã tồn tại trong hệ thống chưa
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({ error: 'Email đã được sử dụng' });
     }
 
+    // Mã hóa mật khẩu trước khi lưu vào cơ sở dữ liệu
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Tạo mới tài khoản user mà không tạo sellerRequest ngay lập tức
     const newUser = new User({
       fullName,
       email,
       password: hashedPassword,
       phone,     // Lưu phone
-      address    // Lưu address
+      address,   // Lưu address
+      role: 'buyer' // Role mặc định là 'buyer'
     });
 
+    // Lưu người dùng vào cơ sở dữ liệu
     await newUser.save();
 
+    // Tạo access token và refresh token
     const { accessToken, refreshToken } = generateTokens(newUser._id);
 
+    // Lưu refresh token vào cookie
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: true,
@@ -38,6 +47,7 @@ const registerUser = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
+    // Trả về phản hồi đăng ký thành công
     res.status(201).json({
       message: 'Đăng ký thành công',
       accessToken,
@@ -47,7 +57,8 @@ const registerUser = async (req, res) => {
         email: newUser.email,
         phone: newUser.phone,  // Trả về phone
         address: newUser.address,  // Trả về address
-        role: newUser.role
+        role: newUser.role,
+        sellerRequest: newUser.sellerRequest  // Trả về sellerRequest mặc định là null
       }
     });
   } catch (err) {

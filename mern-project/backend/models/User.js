@@ -4,8 +4,8 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   fullName: { type: String, required: true },
-  phone: { type: String },  // Đảm bảo lưu số điện thoại
-  address: { type: String }, // Đảm bảo lưu địa chỉ
+  phone: { type: String },
+  address: { type: String },
 
   role: {
     type: String,
@@ -22,9 +22,17 @@ const userSchema = new mongoose.Schema({
     status: {
       type: String,
       enum: ['pending', 'approved', 'rejected'],
-      default: null
     },
-    requestedAt: Date
+    requestedAt: Date,
+    store: {
+      name: { type: String },
+      description: { type: String },
+      logoUrl: { type: String },
+      category: { type: String },
+      rating: { type: Number },
+      location: { type: String },
+      isActive: { type: Boolean }
+    }
   }
 
 }, { timestamps: true });

@@ -7,16 +7,18 @@ const Profile = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
-  const [storeName, setStoreName] = useState(''); // Tên gian hàng
-  const [storeDescription, setStoreDescription] = useState(''); // Mô tả gian hàng
+  const [name, setName] = useState(''); // Tên gian hàng
+  const [description, setDescription] = useState(''); // Mô tả gian hàng
   const [logoUrl, setLogoUrl] = useState(''); // URL ảnh logo
   const [category, setCategory] = useState('Khác'); // Danh mục gian hàng
   const [rating, setRating] = useState(0); // Đánh giá gian hàng
   const [location, setLocation] = useState(''); // Địa chỉ gian hàng
   const [isActive, setIsActive] = useState(true); // Trạng thái gian hàng
   const [showForm, setShowForm] = useState(false); // Hiển thị form khi nhấn nút
+  const [isSubmitting, setIsSubmitting] = useState(false);  // Trạng thái khi đang gửi yêu cầu
   const navigate = useNavigate();
 
+  // Fetch thông tin người dùng
   const fetchProfile = async () => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
@@ -31,7 +33,8 @@ const Profile = () => {
         },
       });
 
-      setUser(res.data.user);
+      setUser(res.data);
+      console.log('User data fetched:', res.data); // Debug log để kiểm tra dữ liệu
       setLoading(false);
     } catch (err) {
       console.error('Lỗi khi lấy thông tin người dùng', err);
@@ -44,17 +47,26 @@ const Profile = () => {
     fetchProfile();
   }, [navigate]);
 
+  // Xử lý gửi yêu cầu làm seller
   const handleRequestSeller = async () => {
     const token = localStorage.getItem('accessToken');
     const data = {
-      storeName,
-      storeDescription,
+      name,
+      description,
       logoUrl,
       category,
-      rating,
+      rating: parseFloat(rating),  // Chuyển đổi rating thành kiểu số
       location,
       isActive,
     };
+
+    // Kiểm tra dữ liệu form trước khi gửi
+    if (!name || !description || !logoUrl || !location) {
+      setMessage('Vui lòng điền đầy đủ thông tin yêu cầu!');
+      return;
+    }
+
+    console.log('Data being sent to backend:', JSON.stringify(data));  // Debug log để kiểm tra dữ liệu
 
     try {
       const res = await axios.post('/user/request-seller', data, {
@@ -100,14 +112,14 @@ const Profile = () => {
                   <input
                     type="text"
                     placeholder="Tên gian hàng"
-                    value={storeName}
-                    onChange={(e) => setStoreName(e.target.value)}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     className="input-field"
                   />
                   <textarea
                     placeholder="Mô tả gian hàng"
-                    value={storeDescription}
-                    onChange={(e) => setStoreDescription(e.target.value)}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                     className="input-field"
                   />
                   <input
@@ -153,7 +165,13 @@ const Profile = () => {
                     />
                     Gian hàng hoạt động
                   </label>
-                  <button className="profile-button" onClick={handleRequestSeller}>📤 Gửi yêu cầu làm Seller</button>
+                  <button
+                    className="profile-button"
+                    onClick={handleRequestSeller}
+                    disabled={isSubmitting} // Disable nút khi đang gửi yêu cầu
+                  >
+                    {isSubmitting ? 'Đang gửi yêu cầu...' : '📤 Gửi yêu cầu làm Seller'}
+                  </button>
                 </div>
               )}
             </div>

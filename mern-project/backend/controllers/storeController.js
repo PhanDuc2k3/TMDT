@@ -28,6 +28,11 @@ const registerStore = async (req, res) => {
 
     await newStore.save();
 
+    // Cập nhật trường 'store' trong bảng User để liên kết gian hàng với user
+    const user = await User.findById(req.user.id);
+    user.store = newStore._id;  // Lưu ObjectId của store vào bảng users
+    await user.save();
+
     res.status(201).json({
       message: 'Gian hàng đã được đăng ký thành công',
       store: newStore

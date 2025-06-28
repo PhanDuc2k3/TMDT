@@ -1,45 +1,222 @@
 const User = require('../models/User');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { generateTokens } = require('../utils/token');
 
-const updateUser = async (req, res) => {
+// Đăng ký người dùng mới
+const registerUser = async (req, res) => {
   try {
-    const userId = req.user.id; // Lấy ID từ token
-    const { fullName, email } = req.body;
+    const { fullName, email, password, phone, address } = req.body;
 
-    if (!fullName || !email)
+    if (!fullName || !email || !password) {
       return res.status(400).json({ error: 'Vui lòng điền đầy đủ thông tin' });
+    }
 
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { fullName, email },
-      { new: true } // trả về document đã cập nhật
-    );
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ error: 'Email đã được sử dụng' });
+    }
 
-    res.status(200).json({
-      message: 'Cập nhật thông tin thành công',
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = new User({
+      fullName,
+      email,
+      password: hashedPassword,
+      phone,
+      address,
+      role: 'buyer'
+    });
+
+    await newUser.save();
+
+    const { accessToken, refreshToken } = generateTokens(newUser._id);
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'Strict',
+      path: '/api/auth/refresh-token',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.status(201).json({
+      message: 'Đăng ký thành công',
+      accessToken,
       user: {
-        id: updatedUser._id,
-        fullName: updatedUser.fullName,
-        email: updatedUser.email
+        id: newUser._id,
+        fullName: newUser.fullName,
+        email: newUser.email,
+        phone: newUser.phone || null,
+        address: newUser.address || null,
+        role: newUser.role,
+        sellerRequest: newUser.sellerRequest || null
       }
     });
   } catch (err) {
+    console.error('Lỗi đăng ký:', err);
     res.status(500).json({ error: 'Lỗi máy chủ' });
   }
 };
 
+// Đăng nhập
+const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email và mật khẩu là bắt buộc' });
+    }
 
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ error: 'Email hoặc mật khẩu không đúng' });
+    }
 
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Email hoặc mật khẩu không đúng' });
+    }
+
+    const { accessToken, refreshToken } = generateTokens(user._id);
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'Strict',
+      path: '/api/auth/refresh-token',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.status(200).json({
+      message: 'Đăng nhập thành công',
+      accessToken,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone || null,
+        address: user.address || null,
+        role: user.role,
+        sellerRequest: user.sellerRequest || null
+      }
+    });
+  } catch (err) {
+    console.error('Lỗi đăng nhập:', err);
+    res.status(500).json({ error: 'Lỗi máy chủ' });
+  }
+};
+
+// Làm mới token
+const refreshAccessToken = (req, res) => {
+  const token = req.cookies.refreshToken;
+  if (!token) {
+    return res.status(401).json({ error: 'Không có refresh token' });
+  }
+
+  jwt.verify(token, process.env.JWT_REFRESH_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ error: 'Refresh token không hợp lệ' });
+    }
+
+    const accessToken = jwt.sign({ id: decoded.id }, process.env.JWT_SECRET, {
+      expiresIn: '15m'
+    });
+
+    res.json({ accessToken });
+  });
+};
+
+// Gửi yêu cầu làm seller
+const requestSeller = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'Người dùng không tồn tại' });
+
+    if (user.role !== 'buyer') {
+      return res.status(400).json({ error: 'Chỉ người mua mới có thể gửi yêu cầu' });
+    }
+
+    if (user.sellerRequest?.status === 'pending') {
+      return res.status(400).json({ error: 'Yêu cầu của bạn đang chờ xét duyệt' });
+    }
+
+    const {
+      name,
+      description,
+      logoUrl,
+      category,
+      rating,
+      location,
+      isActive
+    } = req.body;
+
+    // Validate tối thiểu
+    if (!name || !description || !category || typeof isActive !== 'boolean') {
+      return res.status(400).json({ error: 'Vui lòng cung cấp đủ thông tin cửa hàng' });
+    }
+
+    user.sellerRequest = {
+      status: 'pending',
+      requestedAt: new Date(),
+      store: {
+        name,
+        description,
+        logoUrl: logoUrl || '',
+        category,
+        rating: rating || 0,
+        location: location || '',
+        isActive
+      }
+    };
+
+    await user.save();
+
+    res.json({ message: '✅ Đã gửi yêu cầu làm seller. Vui lòng chờ admin duyệt.' });
+  } catch (err) {
+    console.error('Lỗi gửi yêu cầu seller:', err);
+    res.status(500).json({ error: 'Lỗi máy chủ' });
+  }
+};
+
+// Lấy danh sách người mua (admin dùng)
 const getBuyers = async (req, res) => {
   try {
-    const buyers = await User.find({ role: 'buyer' });
-    res.json({ buyers });
+    const buyers = await User.find({ role: 'buyer' }).select('-password');
+    res.json(buyers);
   } catch (err) {
-    res.status(500).json({ error: 'Lỗi server' });
+    console.error('Lỗi khi lấy danh sách buyer:', err);
+    res.status(500).json({ error: 'Lỗi máy chủ' });
+  }
+};
+
+// Lấy thông tin profile của người dùng
+const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).populate('store');
+
+    if (!user) return res.status(404).json({ error: 'Người dùng không tồn tại' });
+
+    res.json({
+      id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      phone: user.phone || null,
+      address: user.address || null,
+      role: user.role,
+      store: user.store || null,
+      sellerRequest: user.sellerRequest || null
+    });
+  } catch (err) {
+    console.error('Lỗi khi lấy profile:', err);
+    res.status(500).json({ error: 'Lỗi máy chủ' });
   }
 };
 
 module.exports = {
-  updateUser,
-  getBuyers
+  registerUser,
+  loginUser,
+  refreshAccessToken,
+  requestSeller,
+  getBuyers,
+  getProfile
 };
-

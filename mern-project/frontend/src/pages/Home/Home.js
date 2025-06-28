@@ -30,7 +30,7 @@ const Home = () => {
           const res = await axios.get('/user/profile', {
             headers: { Authorization: `Bearer ${token}` },
           });
-          setUser(res.data.user);  // Lưu thông tin người dùng
+          setUser(res.data);  // Lưu thông tin người dùng
         } catch (err) {
           console.error('Lỗi khi lấy thông tin người dùng:', err);
         }
