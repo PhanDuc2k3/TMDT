@@ -6,7 +6,8 @@ import PrivateRoute from './components/PrivateRoute';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminRoute from './components/AdminRoute';
 import Home from './pages/Home/Home';  // Import Home page
-
+import ShopDetail from './pages/ShopDetail/ShopDetail';  // Import ShopDetail page
+import MyStore from './pages/MyStore/MyStore';  // Import MyStore page
 function App() {
   return (
     <Router>
@@ -19,6 +20,9 @@ function App() {
 
         {/* Đăng ký */}
         <Route path="/signup" element={<Signup />} />
+        {/* Trang gian hàng - Public */}
+        <Route path="/shop/:shopId" element={<ShopDetail />} />
+        <Route path="/my-store" element={<MyStore />} />
 
         {/* Trang profile dành cho người dùng đã đăng nhập */}
         <Route

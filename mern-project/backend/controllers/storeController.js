@@ -54,7 +54,20 @@ const getStores = async (req, res) => {
   }
 };
 
+const getStoreById = async (req, res) => {
+  try {
+    const store = await Store.findById(req.params.id);
+    if (!store) {
+      return res.status(404).json({ error: 'Store not found' });
+    }
+    res.json(store);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   registerStore,
-  getStores
+  getStores,
+  getStoreById,
 };

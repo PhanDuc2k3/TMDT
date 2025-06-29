@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from '../../api/axios';  // Cập nhật đường dẫn nếu cần
-import styles from './Home.module.scss';  // Import SCSS module
+import axios from '../../api/axios'; // Cập nhật đường dẫn nếu cần
+import styles from './Home.module.scss'; // Import SCSS module
 
 const Home = () => {
   const [shops, setShops] = useState([]);
-  const [user, setUser] = useState(null); // Lưu thông tin người dùng
-  const [showDropdown, setShowDropdown] = useState(false); // Hiển thị dropdown menu
+  const [user, setUser] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(false);
   const navigate = useNavigate();
 
-  // Lấy gian hàng từ API
   useEffect(() => {
     const fetchShops = async () => {
       try {
-        const res = await axios.get('/store/stores');  // Endpoint để lấy gian hàng
+        const res = await axios.get('/store/stores');
         setShops(res.data);
       } catch (err) {
         console.error('Lỗi khi lấy gian hàng:', err);
@@ -22,7 +21,6 @@ const Home = () => {
 
     fetchShops();
 
-    // Kiểm tra token và lấy thông tin người dùng
     const token = localStorage.getItem('accessToken');
     if (token) {
       const fetchUser = async () => {
@@ -30,7 +28,7 @@ const Home = () => {
           const res = await axios.get('/user/profile', {
             headers: { Authorization: `Bearer ${token}` },
           });
-          setUser(res.data);  // Lưu thông tin người dùng
+          setUser(res.data);
         } catch (err) {
           console.error('Lỗi khi lấy thông tin người dùng:', err);
         }
@@ -39,11 +37,10 @@ const Home = () => {
     }
   }, []);
 
-  // Đăng xuất
   const handleLogout = () => {
-    localStorage.removeItem('accessToken'); // Xóa token khỏi local storage
-    setUser(null); // Đặt lại thông tin người dùng
-    navigate('/login'); // Chuyển hướng về trang login
+    localStorage.removeItem('accessToken');
+    setUser(null);
+    navigate('/login');
   };
 
   return (
@@ -52,7 +49,6 @@ const Home = () => {
       <header className={styles.header}>
         <div className={styles.logo}>E-commerce</div>
 
-        {/* Menu - Căn giữa các mục */}
         <nav>
           <ul className={styles.navList}>
             <li><Link to="/">Trang chủ</Link></li>
@@ -61,13 +57,22 @@ const Home = () => {
           </ul>
         </nav>
 
-        {/* Hiển thị tên người dùng nếu đã đăng nhập */}
         <div className={styles.authSection}>
+          {/* MỤC GIAN HÀNG CỦA BẠN (chỉ hiện với seller) */}
+          {user?.role === 'seller' && (
+            <div className={styles.myStore}>
+              <Link to="/my-store" className={styles.myStoreBtn}>
+                🏪 Gian hàng của bạn
+              </Link>
+            </div>
+          )}
+
+          {/* Đăng nhập / Dropdown */}
           {user ? (
             <div className={styles.userDropdown}>
               <span
                 className={styles.userName}
-                onClick={() => setShowDropdown(!showDropdown)} // Toggle dropdown
+                onClick={() => setShowDropdown(!showDropdown)}
               >
                 {user.fullName}
               </span>
@@ -102,7 +107,7 @@ const Home = () => {
           {shops.length > 0 ? (
             shops.map((shop) => (
               <div key={shop._id} className={styles.shopCard}>
-                <img src={shop.imageUrl} alt={shop.name} className={styles.shopImage} />
+                <img src={shop.logoUrl} alt={shop.name} className={styles.shopImage} />
                 <h3>{shop.name}</h3>
                 <p>{shop.description}</p>
                 <Link to={`/shop/${shop._id}`} className={styles.viewShopBtn}>Xem gian hàng</Link>

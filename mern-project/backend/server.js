@@ -24,12 +24,13 @@ const adminRoutes = require('./routes/adminRoutes');
 const storeRoutes = require('./routes/storeRoutes');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
-
+const productRoutes = require('./routes/productRoutes');
 // ✅ Load routes
 app.use('/api/admin', adminRoutes); 
 app.use('/api/store', storeRoutes); 
 app.use('/api/auth', authRoutes);   
 app.use('/api/user', userRoutes);
+app.use('/api/product', productRoutes);
 
 // ✅ Route kiểm tra
 app.get('/', (req, res) => {

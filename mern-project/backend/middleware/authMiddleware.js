@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Store = require('../models/Store'); // ✅ import thêm
 
 const verifyToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -10,14 +11,16 @@ const verifyToken = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Tìm user trong DB để lấy role
     const user = await User.findById(decoded.id).select('-password');
     if (!user) return res.status(401).json({ error: 'Token không hợp lệ' });
 
-    // ✅ Gán đầy đủ thông tin vào req.user
+    // ✅ Tìm store của user
+    const store = await Store.findOne({ owner: user._id });
+
     req.user = {
       id: user._id,
-      role: user.role
+      role: user.role,
+      storeId: store ? String(store._id) : null // Thêm storeId nếu có
     };
 
     next();
