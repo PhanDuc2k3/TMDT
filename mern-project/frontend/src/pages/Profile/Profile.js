@@ -1,24 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from '../../api/axios';  // Cập nhật đường dẫn nếu cần
-import './Profile.scss'; // Đừng quên import file SCSS
+import axios from '../../api/axios';
+import './Profile.scss';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
-  const [name, setName] = useState(''); // Tên gian hàng
-  const [description, setDescription] = useState(''); // Mô tả gian hàng
-  const [logoUrl, setLogoUrl] = useState(''); // URL ảnh logo
-  const [category, setCategory] = useState('Khác'); // Danh mục gian hàng
-  const [rating, setRating] = useState(0); // Đánh giá gian hàng
-  const [location, setLocation] = useState(''); // Địa chỉ gian hàng
-  const [isActive, setIsActive] = useState(true); // Trạng thái gian hàng
-  const [showForm, setShowForm] = useState(false); // Hiển thị form khi nhấn nút
-  const [isSubmitting, setIsSubmitting] = useState(false);  // Trạng thái khi đang gửi yêu cầu
+  const [showForm, setShowForm] = useState(false);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [category, setCategory] = useState('Khác');
+  const [rating, setRating] = useState(0);
+  const [location, setLocation] = useState('');
+  const [isActive, setIsActive] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  // Fetch thông tin người dùng
   const fetchProfile = async () => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
@@ -34,7 +33,6 @@ const Profile = () => {
       });
 
       setUser(res.data);
-      console.log('User data fetched:', res.data); // Debug log để kiểm tra dữ liệu
       setLoading(false);
     } catch (err) {
       console.error('Lỗi khi lấy thông tin người dùng', err);
@@ -47,7 +45,6 @@ const Profile = () => {
     fetchProfile();
   }, [navigate]);
 
-  // Xử lý gửi yêu cầu làm seller
   const handleRequestSeller = async () => {
     const token = localStorage.getItem('accessToken');
     const data = {
@@ -55,20 +52,18 @@ const Profile = () => {
       description,
       logoUrl,
       category,
-      rating: parseFloat(rating),  // Chuyển đổi rating thành kiểu số
+      rating: parseFloat(rating),
       location,
       isActive,
     };
 
-    // Kiểm tra dữ liệu form trước khi gửi
     if (!name || !description || !logoUrl || !location) {
       setMessage('Vui lòng điền đầy đủ thông tin yêu cầu!');
       return;
     }
 
-    console.log('Data being sent to backend:', JSON.stringify(data));  // Debug log để kiểm tra dữ liệu
-
     try {
+      setIsSubmitting(true);
       const res = await axios.post('/user/request-seller', data, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -76,9 +71,11 @@ const Profile = () => {
       });
 
       setMessage(res.data.message);
-      fetchProfile(); // reload lại thông tin mới
+      fetchProfile();
+      setIsSubmitting(false);
     } catch (err) {
       setMessage(err.response?.data?.error || '❌ Gửi yêu cầu thất bại');
+      setIsSubmitting(false);
     }
   };
 
@@ -87,12 +84,25 @@ const Profile = () => {
   return (
     <div className="profile-container">
       <h2 className="profile-header">👤 Thông tin tài khoản</h2>
+
+      {user.avatarUrl && (
+        <div className="avatar-container">
+          <img src={user.avatarUrl} alt="Avatar" className="avatar-image" />
+        </div>
+      )}
+
       <div className="profile-info">
         <p><strong>Họ tên:</strong> {user.fullName}</p>
         <p><strong>Email:</strong> {user.email}</p>
         <p><strong>Số điện thoại:</strong> {user.phone}</p>
         <p><strong>Địa chỉ:</strong> {user.address}</p>
         <p><strong>Vai trò:</strong> {user.role}</p>
+      </div>
+
+      <div className="profile-button-container">
+        <button className="profile-button" onClick={() => navigate('/edit-profile')}>
+          ✏️ Sửa thông tin
+        </button>
       </div>
 
       {user.role === 'buyer' && (
@@ -168,7 +178,7 @@ const Profile = () => {
                   <button
                     className="profile-button"
                     onClick={handleRequestSeller}
-                    disabled={isSubmitting} // Disable nút khi đang gửi yêu cầu
+                    disabled={isSubmitting}
                   >
                     {isSubmitting ? 'Đang gửi yêu cầu...' : '📤 Gửi yêu cầu làm Seller'}
                   </button>

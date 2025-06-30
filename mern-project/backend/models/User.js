@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   phone: { type: String },
   address: { type: String },
+  avatarUrl: { type: String }, // Thêm avatar vào đây
 
   role: {
     type: String,

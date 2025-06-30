@@ -1,0 +1,71 @@
+.edit-profile-container {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.edit-profile-container h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.edit-profile-form label {
+    display: block;
+    margin-bottom: 1rem;
+    font-weight: bold;
+}
+
+.edit-profile-form input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 4px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.avatar-preview {
+    margin: 1rem 0;
+    text-align: center;
+}
+
+.avatar-preview img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+}
+
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+}
+
+.button-group button {
+    flex: 1;
+    padding: 10px;
+    margin-right: 0.5rem;
+    background-color: #4caf50;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.button-group .cancel-btn {
+    background-color: #f44336;
+}
+
+.button-group button:last-child {
+    margin-right: 0;
+}
+
+.edit-message {
+    margin-top: 1rem;
+    text-align: center;
+    font-weight: bold;
+}

@@ -8,7 +8,8 @@ import AdminRoute from './components/AdminRoute';
 import Home from './pages/Home/Home';
 import ShopDetail from './pages/ShopDetail/ShopDetail';
 import MyStore from './pages/MyStore/MyStore';
-import Layout from './components/Layout/Layout'; // ✅ Layout dùng chung cho mọi trang
+import Layout from './components/Layout/Layout';
+import EditProfile from './pages/EditProfile/EditProfile'; // ✅ Đúng folder Profile
 
 function App() {
   return (
@@ -31,6 +32,16 @@ function App() {
             element={
               <PrivateRoute>
                 <Profile />
+              </PrivateRoute>
+            }
+          />
+
+          {/* Trang chỉnh sửa thông tin (yêu cầu đăng nhập) */}
+          <Route
+            path="edit-profile"
+            element={
+              <PrivateRoute>
+                <EditProfile />
               </PrivateRoute>
             }
           />

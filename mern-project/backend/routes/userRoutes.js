@@ -13,4 +13,6 @@ router.post('/request-seller', verifyToken, userController.requestSeller);
 // 📌 [GET] Admin lấy danh sách buyer
 router.get('/buyers', verifyToken, isAdmin, userController.getBuyers);
 
+router.put('/update-profile', verifyToken, userController.updateProfile); // ✅ Thêm route cập nhật
+
 module.exports = router;
