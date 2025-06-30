@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from '../../api/axios';
+import { getCart } from '../../utils/cart';
+import { FaShoppingCart } from 'react-icons/fa';
 import styles from './Layout.module.scss';
 
 const Layout = () => {
   const [user, setUser] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 🔁 Load lại user mỗi lần đổi route (sau khi login xong)
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
@@ -27,7 +30,12 @@ const Layout = () => {
         localStorage.removeItem('accessToken');
         setUser(null);
       });
-  }, [location.pathname]); // 🔥 Đổi path → kiểm tra lại user
+
+    // Cập nhật số lượng giỏ hàng mỗi lần route thay đổi
+    const cart = getCart();
+    const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+    setCartCount(total);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
@@ -37,7 +45,6 @@ const Layout = () => {
 
   return (
     <div className={styles.layoutContainer}>
-      {/* Header */}
       <header className={styles.header}>
         <div className={styles.logo}>
           <Link to="/" className={styles.logoText}>E-commerce</Link>
@@ -47,30 +54,56 @@ const Layout = () => {
           <ul className={styles.navList}>
             <li><Link to="/">Trang chủ</Link></li>
             <li><Link to="/shops">Gian hàng</Link></li>
-            <li><Link to="/cart">Giỏ hàng</Link></li>
           </ul>
         </nav>
 
         <div className={styles.authSection}>
-          {user?.role === 'seller' && (
-            <Link to="/my-store" className={styles.myStoreBtn}>🏪 Gian hàng của bạn</Link>
-          )}
-
           {user ? (
-            <div className={styles.userDropdown}>
-              <span
-                className={styles.userName}
-                onClick={() => setShowDropdown(!showDropdown)}
+            <>
+              {/* Icon giỏ hàng */}
+              <div
+                className={styles.cartIcon}
+                onClick={() => navigate('/cart')}
+                style={{ cursor: 'pointer', position: 'relative', marginRight: '15px' }}
               >
-                {user.fullName}
-              </span>
-              {showDropdown && (
-                <div className={styles.dropdownMenu}>
-                  <Link to="/profile" className={styles.dropdownItem}>Thông tin cá nhân</Link>
-                  <button onClick={handleLogout} className={styles.dropdownItem}>Đăng xuất</button>
-                </div>
-              )}
-            </div>
+                <FaShoppingCart size={24} />
+                {cartCount > 0 && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '-8px',
+                      right: '-8px',
+                      background: 'red',
+                      color: 'white',
+                      borderRadius: '50%',
+                      padding: '2px 6px',
+                      fontSize: '12px',
+                    }}
+                  >
+                    {cartCount}
+                  </span>
+                )}
+              </div>
+
+              {/* Avatar user */}
+              <div className={styles.userDropdown}>
+                <img
+                  src={user.avatarUrl || 'https://via.placeholder.com/40'}
+                  alt="Avatar"
+                  className={styles.avatar}
+                  onClick={() => setShowDropdown(!showDropdown)}
+                />
+                {showDropdown && (
+                  <div className={styles.dropdownMenu}>
+                    <Link to="/profile" className={styles.dropdownItem}>Thông tin cá nhân</Link>
+                    {user.role === 'seller' && (
+                      <Link to="/my-store" className={styles.dropdownItem}>Gian hàng của bạn</Link>
+                    )}
+                    <button onClick={handleLogout} className={styles.dropdownItem}>Đăng xuất</button>
+                  </div>
+                )}
+              </div>
+            </>
           ) : (
             <>
               <Link to="/login" className={styles.authLink}>Đăng nhập</Link>
@@ -80,12 +113,10 @@ const Layout = () => {
         </div>
       </header>
 
-      {/* Nội dung chính */}
       <main className={styles.mainContent}>
         <Outlet />
       </main>
 
-      {/* Footer */}
       <footer className={styles.footer}>
         <p>&copy; 2025 E-commerce. Tất cả các quyền được bảo vệ.</p>
         <div className={styles.socialLinks}>

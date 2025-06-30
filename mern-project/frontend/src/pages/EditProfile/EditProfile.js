@@ -24,7 +24,6 @@ const EditProfile = () => {
     try {
       const res = await axios.get('/user/profile', {
         headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true,
       });
 
       setUser({
@@ -60,7 +59,6 @@ const EditProfile = () => {
     try {
       await axios.put('/user/update-profile', user, {
         headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true,
       });
 
       setMessage('✅ Cập nhật thông tin thành công');
@@ -75,63 +73,75 @@ const EditProfile = () => {
 
   return (
     <div className="edit-profile-container">
-      <h2>✏️ Sửa thông tin cá nhân</h2>
-      <form className="edit-profile-form" onSubmit={handleSubmit}>
-        <label>
-          Họ tên:
-          <input
-            type="text"
-            name="fullName"
-            value={user.fullName}
-            onChange={handleChange}
-            required
-          />
-        </label>
+      <h2 className="edit-profile-header">✏️ Sửa thông tin cá nhân</h2>
 
-        <label>
-          Số điện thoại:
-          <input
-            type="text"
-            name="phone"
-            value={user.phone}
-            onChange={handleChange}
-          />
-        </label>
-
-        <label>
-          Địa chỉ:
-          <input
-            type="text"
-            name="address"
-            value={user.address}
-            onChange={handleChange}
-          />
-        </label>
-
-        <label>
-          Ảnh đại diện (URL):
-          <input
-            type="text"
-            name="avatarUrl"
-            value={user.avatarUrl}
-            onChange={handleChange}
-          />
-        </label>
-
-        {user.avatarUrl && (
-          <div className="avatar-preview">
-            <p>Xem trước ảnh đại diện:</p>
-            <img src={user.avatarUrl} alt="Avatar preview" />
-          </div>
-        )}
-
-        <div className="button-group">
-          <button type="submit">💾 Lưu thay đổi</button>
-          <button type="button" className="cancel-btn" onClick={() => navigate('/profile')}>
-            Quay lại
-          </button>
+      <div className="edit-profile-content">
+        <div className="edit-profile-left">
+          {user.avatarUrl ? (
+            <img src={user.avatarUrl} alt="Avatar" className="avatar-image" />
+          ) : (
+            <div className="avatar-placeholder">Không có ảnh</div>
+          )}
         </div>
-      </form>
+
+        <div className="edit-profile-right">
+          <form className="edit-profile-form" onSubmit={handleSubmit}>
+            <label>
+              Họ tên:
+              <input
+                type="text"
+                name="fullName"
+                value={user.fullName}
+                onChange={handleChange}
+                required
+              />
+            </label>
+
+            <label>
+              Số điện thoại:
+              <input
+                type="text"
+                name="phone"
+                value={user.phone}
+                onChange={handleChange}
+              />
+            </label>
+
+            <label>
+              Địa chỉ:
+              <input
+                type="text"
+                name="address"
+                value={user.address}
+                onChange={handleChange}
+              />
+            </label>
+
+            <label>
+              Ảnh đại diện (URL):
+              <input
+                type="text"
+                name="avatarUrl"
+                value={user.avatarUrl}
+                onChange={handleChange}
+              />
+            </label>
+
+            <div className="button-group">
+              <button type="submit" className="save-button">
+                💾 Lưu thay đổi
+              </button>
+              <button
+                type="button"
+                className="cancel-button"
+                onClick={() => navigate('/profile')}
+              >
+                ⬅️ Quay lại
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
 
       {message && <p className="edit-message">{message}</p>}
     </div>

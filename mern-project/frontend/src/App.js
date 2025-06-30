@@ -10,7 +10,9 @@ import ShopDetail from './pages/ShopDetail/ShopDetail';
 import MyStore from './pages/MyStore/MyStore';
 import Layout from './components/Layout/Layout';
 import EditProfile from './pages/EditProfile/EditProfile'; // ✅ Đúng folder Profile
-
+import ProductDetail from './pages/ProductDetail/ProductDetail'; // ✅ Đúng folder ProductDetail
+import CartPage from './pages/CartPage/CartPage'; // Thêm dòng này
+import PaymentSuccess from './pages/PaymentSuccess/PaymentSuccess'; // Thêm dòng này
 function App() {
   return (
     <Router>
@@ -25,7 +27,17 @@ function App() {
           <Route path="signup" element={<Signup />} />
           <Route path="shop/:shopId" element={<ShopDetail />} />
           <Route path="my-store" element={<MyStore />} />
+          <Route path="/product/:productId" element={<ProductDetail />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
 
+          <Route
+            path="cart"
+            element={
+              <PrivateRoute>
+                <CartPage />
+              </PrivateRoute>
+            }
+          />
           {/* Trang cá nhân (yêu cầu đăng nhập) */}
           <Route
             path="profile"

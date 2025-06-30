@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from '../../api/axios';
 import styles from './ShopDetail.module.scss';
+import { Link } from 'react-router-dom';
 
 const ShopDetail = () => {
   const { shopId } = useParams();
@@ -14,11 +15,10 @@ const ShopDetail = () => {
     const fetchShopAndProducts = async () => {
       setLoading(true);
       try {
-        const resShop = await axios.get(`/store/stores/${shopId}`);
-        const resProducts = await axios.get(`/product/by-store/${shopId}`);
-        if (resShop.status !== 200 || resProducts.status !== 200) {
-          throw new Error('Không thể tải dữ liệu gian hàng');
-        }        
+        const [resShop, resProducts] = await Promise.all([
+          axios.get(`/store/stores/${shopId}`),
+          axios.get(`/product/by-store/${shopId}`)
+        ]);
 
         setShop(resShop.data);
         setProducts(resProducts.data);
@@ -48,31 +48,36 @@ const ShopDetail = () => {
           alt={shop.name}
           className={styles.logo}
         />
-        <div>
+        <div className={styles.shopText}>
           <h2>{shop.name}</h2>
-          <p>{shop.description}</p>
-          <p>Địa điểm: {shop.location}</p>
-          <p>Đánh giá: {shop.rating}/5</p>
+          <p><strong>Mô tả:</strong> {shop.description}</p>
+          <p><strong>Địa điểm:</strong> {shop.location}</p>
+          <p><strong>Đánh giá:</strong> {shop.rating} / 5</p>
         </div>
       </div>
 
-      <h3>Sản phẩm của gian hàng</h3>
+      <h3 className={styles.productTitle}>Sản phẩm của gian hàng</h3>
       <div className={styles.productGrid}>
-        {products.length > 0 ? (
-          products.map((product) => (
-            <div key={product._id} className={styles.productCard}>
-              <img
-                src={product.image || 'https://via.placeholder.com/200'}
-                alt={product.name}
-              />
-              <h4>{product.name}</h4>
-              <p>{product.price.toLocaleString()}₫</p>
-            </div>
-          ))
-        ) : (
-          <p>Gian hàng này chưa có sản phẩm nào.</p>
-        )}
-      </div>
+  {products.length > 0 ? (
+    products.map((product) => (
+      <Link 
+        to={`/product/${product._id}`} 
+        key={product._id} 
+        className={styles.productCard}
+      >
+        <img
+          src={product.images?.[0] || 'https://via.placeholder.com/200'}
+          alt={product.name}
+        />
+        <h4>{product.name}</h4>
+        <p><strong>Giá:</strong> {product.price.toLocaleString()}₫</p>
+      </Link>
+    ))
+  ) : (
+    <p className={styles.noProduct}>Gian hàng này chưa có sản phẩm nào.</p>
+  )}
+</div>
+
     </div>
   );
 };

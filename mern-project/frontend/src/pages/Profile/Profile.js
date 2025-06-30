@@ -27,9 +27,7 @@ const Profile = () => {
 
     try {
       const res = await axios.get('/user/profile', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       setUser(res.data);
@@ -43,7 +41,7 @@ const Profile = () => {
 
   useEffect(() => {
     fetchProfile();
-  }, [navigate]);
+  }, []);
 
   const handleRequestSeller = async () => {
     const token = localStorage.getItem('accessToken');
@@ -65,9 +63,7 @@ const Profile = () => {
     try {
       setIsSubmitting(true);
       const res = await axios.post('/user/request-seller', data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       setMessage(res.data.message);
@@ -85,26 +81,45 @@ const Profile = () => {
     <div className="profile-container">
       <h2 className="profile-header">👤 Thông tin tài khoản</h2>
 
-      {user.avatarUrl && (
-        <div className="avatar-container">
-          <img src={user.avatarUrl} alt="Avatar" className="avatar-image" />
+      <div className="profile-content">
+        <div className="profile-left">
+          {user.avatarUrl ? (
+            <img src={user.avatarUrl} alt="Avatar" className="avatar-image" />
+          ) : (
+            <div className="avatar-placeholder">Không có ảnh</div>
+          )}
         </div>
-      )}
 
-      <div className="profile-info">
-        <p><strong>Họ tên:</strong> {user.fullName}</p>
-        <p><strong>Email:</strong> {user.email}</p>
-        <p><strong>Số điện thoại:</strong> {user.phone}</p>
-        <p><strong>Địa chỉ:</strong> {user.address}</p>
-        <p><strong>Vai trò:</strong> {user.role}</p>
+        <div className="profile-right">
+          <div className="profile-info">
+            <p><strong>Họ tên:</strong> {user.fullName}</p>
+            <p><strong>Email:</strong> {user.email}</p>
+            <p><strong>Số điện thoại:</strong> {user.phone}</p>
+            <p><strong>Địa chỉ:</strong> {user.address}</p>
+            <p><strong>Vai trò:</strong> {user.role}</p>
+          </div>
+        </div>
       </div>
 
+      {/* Bộ 3 nút luôn hiển thị */}
       <div className="profile-button-container">
-        <button className="profile-button" onClick={() => navigate('/edit-profile')}>
-          ✏️ Sửa thông tin
-        </button>
+        <div className="button-left">
+          <button className="profile-button" onClick={() => navigate('/edit-profile')}>
+            ✏️ Sửa thông tin
+          </button>
+          <button className="profile-button" onClick={() => navigate('/change-password')}>
+            🔒 Đổi mật khẩu
+          </button>
+        </div>
+
+        <div className="button-right">
+          <button className="profile-button back-button" onClick={() => navigate('/')}>
+            ⬅️ Quay lại trang chủ
+          </button>
+        </div>
       </div>
 
+      {/* Phần gửi yêu cầu Seller */}
       {user.role === 'buyer' && (
         <div className="profile-button-container">
           {user.sellerRequest?.status === 'pending' ? (
@@ -112,7 +127,7 @@ const Profile = () => {
           ) : user.sellerRequest?.status === 'approved' ? (
             <p className="status-approved">✅ Bạn đã được duyệt làm seller</p>
           ) : (
-            <div>
+            <>
               {!showForm ? (
                 <button className="profile-button" onClick={() => setShowForm(true)}>
                   Gửi yêu cầu làm Seller
@@ -184,7 +199,7 @@ const Profile = () => {
                   </button>
                 </div>
               )}
-            </div>
+            </>
           )}
         </div>
       )}

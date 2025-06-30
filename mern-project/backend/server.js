@@ -25,13 +25,16 @@ const storeRoutes = require('./routes/storeRoutes');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+const paymentRoutes = require('./routes/payment');
 // ✅ Load routes
 app.use('/api/admin', adminRoutes); 
 app.use('/api/store', storeRoutes); 
 app.use('/api/auth', authRoutes);   
 app.use('/api/user', userRoutes);
 app.use('/api/product', productRoutes);
-
+app.use('/api/order', orderRoutes);
+app.use('/api/payment', paymentRoutes);
 // ✅ Route kiểm tra
 app.get('/', (req, res) => {
   res.send('API is running...');
