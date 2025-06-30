@@ -1,16 +1,37 @@
-import React from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 
 const PaymentSuccess = () => {
-  const [searchParams] = useSearchParams();
-  
-  // Đọc tham số Momo trả về nếu cần
-  const resultCode = searchParams.get('resultCode');
+  const [orderItems, setOrderItems] = useState([]);
+  const [total, setTotal] = useState(0);
+
+  useEffect(() => {
+    const savedOrder = sessionStorage.getItem('recentOrder');
+    if (savedOrder) {
+      const items = JSON.parse(savedOrder);
+      setOrderItems(items);
+
+      const sum = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+      setTotal(sum);
+    }
+  }, []);
 
   return (
     <div style={{ padding: '2rem' }}>
       <h2>🎉 Thanh toán thành công!</h2>
-      {resultCode && <p>Mã kết quả: {resultCode}</p>}
+      <h3>🧾 Chi tiết đơn hàng:</h3>
+      {orderItems.length > 0 ? (
+        <ul>
+          {orderItems.map((item, idx) => (
+            <li key={idx}>
+              {item.name} - {item.quantity} x {item.price.toLocaleString()}₫
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>Không có sản phẩm trong đơn hàng.</p>
+      )}
+
+      <h3>Tổng tiền: {total.toLocaleString()}₫</h3>
       <p>Cảm ơn bạn đã mua sắm!</p>
     </div>
   );

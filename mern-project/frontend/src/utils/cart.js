@@ -50,4 +50,8 @@ export const getCart = () => {
     const cart = getCart().filter((item) => item.productId !== productId);
     saveCart(cart);
   };
+  // Xóa toàn bộ giỏ hàng
+export const clearCart = () => {
+    localStorage.removeItem('cart');
+  };
   

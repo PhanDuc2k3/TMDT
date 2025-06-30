@@ -32,23 +32,30 @@ const CartPage = () => {
 
   const handleCheckoutMomo = async () => {
     if (cart.length === 0) return;
-
+  
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await axios.post(
-        '/payment/create_momo',
-        { totalAmount: totalPrice },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
+  
+      const orderRes = await axios.post('/order/create', { items: cart, totalAmount: totalPrice }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+  
+      const orderId = orderRes.data.orderId;
+  
+      const res = await axios.post('/payment/create_momo', { totalAmount: totalPrice, orderId }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+  
       if (res.data.payUrl) {
+        sessionStorage.setItem('recentOrder', JSON.stringify(cart));
         window.location.href = res.data.payUrl;
       }
     } catch (err) {
-      console.error('Lỗi thanh toán Momo:', err);
+      console.error('Lỗi thanh toán:', err);
       alert('Không thể tạo thanh toán Momo.');
     }
   };
+  
 
   if (cart.length === 0) {
     return (
