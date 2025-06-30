@@ -45,62 +45,13 @@ const Home = () => {
 
   return (
     <div className={styles.homeContainer}>
-      {/* Header Section */}
-      <header className={styles.header}>
-        <div className={styles.logo}>E-commerce</div>
-
-        <nav>
-          <ul className={styles.navList}>
-            <li><Link to="/">Trang chủ</Link></li>
-            <li><Link to="/shops">Gian hàng</Link></li>
-            <li><Link to="/cart">Giỏ hàng</Link></li>
-          </ul>
-        </nav>
-
-        <div className={styles.authSection}>
-          {/* MỤC GIAN HÀNG CỦA BẠN (chỉ hiện với seller) */}
-          {user?.role === 'seller' && (
-            <div className={styles.myStore}>
-              <Link to="/my-store" className={styles.myStoreBtn}>
-                🏪 Gian hàng của bạn
-              </Link>
-            </div>
-          )}
-
-          {/* Đăng nhập / Dropdown */}
-          {user ? (
-            <div className={styles.userDropdown}>
-              <span
-                className={styles.userName}
-                onClick={() => setShowDropdown(!showDropdown)}
-              >
-                {user.fullName}
-              </span>
-              {showDropdown && (
-                <div className={styles.dropdownMenu}>
-                  <Link to="/profile" className={styles.dropdownItem}>Thông tin cá nhân</Link>
-                  <button onClick={handleLogout} className={styles.dropdownItem}>Đăng xuất</button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <>
-              <Link to="/login" className={styles.authLink}>Đăng nhập</Link>
-              <Link to="/signup" className={styles.authLink}>Đăng ký</Link>
-            </>
-          )}
-        </div>
-      </header>
-
-      {/* Banner Section */}
       <section className={styles.banner}>
         <div className={styles.bannerText}>
           <h1>Chào mừng đến với sàn thương mại điện tử</h1>
           <p>Mua sắm sản phẩm chất lượng từ các gian hàng uy tín</p>
         </div>
       </section>
-
-      {/* Shops List Section */}
+  
       <section className={styles.shopsSection}>
         <h2>Các gian hàng nổi bật</h2>
         <div className={styles.shopsGrid}>
@@ -118,18 +69,8 @@ const Home = () => {
           )}
         </div>
       </section>
-
-      {/* Footer Section */}
-      <footer className={styles.footer}>
-        <p>&copy; 2025 E-commerce. Tất cả các quyền được bảo vệ.</p>
-        <div className={styles.socialLinks}>
-          <a href="#">Facebook</a>
-          <a href="#">Instagram</a>
-          <a href="#">Twitter</a>
-        </div>
-      </footer>
     </div>
-  );
+  );  
 };
 
 export default Home;

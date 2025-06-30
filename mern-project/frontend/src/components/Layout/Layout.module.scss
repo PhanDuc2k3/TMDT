@@ -1,0 +1,149 @@
+.layoutContainer {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: 'Arial', sans-serif;
+    background-color: #f9f9f9;
+}
+
+/* Header */
+.header {
+    background-color: #2c3e50; // màu xanh đen hiện đại
+    color: #ffffff;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.navList {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    padding: 0;
+    margin: 0;
+
+    li {
+        a {
+            text-decoration: none;
+            color: #ffffff;
+            font-weight: 500;
+
+            &:hover {
+                color: #1abc9c; // xanh ngọc nổi bật
+            }
+        }
+    }
+}
+
+.authSection {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.authLink {
+    text-decoration: none;
+    color: #1abc9c;
+    font-weight: 500;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.myStoreBtn {
+    padding: 6px 12px;
+    background-color: #1abc9c;
+    color: white;
+    border-radius: 4px;
+    font-size: 14px;
+    text-decoration: none;
+
+    &:hover {
+        background-color: #16a085;
+    }
+}
+
+.userDropdown {
+    position: relative;
+    cursor: pointer;
+}
+
+.userName {
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.dropdownMenu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 999;
+    width: 160px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.dropdownItem {
+    display: block;
+    padding: 10px 16px;
+    text-decoration: none;
+    color: #333;
+    background-color: #fff;
+    font-size: 14px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+
+    &:hover {
+        background-color: #f8f9fa;
+    }
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    button {
+        all: unset;
+        width: 100%;
+        cursor: pointer;
+    }
+}
+
+.mainContent {
+    flex: 1;
+    padding: 32px;
+}
+
+/* Footer */
+.footer {
+    background-color: #2c3e50;
+    padding: 20px 32px;
+    text-align: center;
+    color: #ffffff;
+    font-size: 14px;
+    border-top: 1px solid #1a252f;
+}
+
+.socialLinks {
+    margin-top: 8px;
+
+    a {
+        margin: 0 8px;
+        color: #ffffff;
+        text-decoration: none;
+
+        &:hover {
+            color: #1abc9c;
+        }
+    }
+}
