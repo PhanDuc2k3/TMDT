@@ -13,6 +13,7 @@ import EditProfile from './pages/EditProfile/EditProfile'; // ✅ Đúng folder 
 import ProductDetail from './pages/ProductDetail/ProductDetail'; // ✅ Đúng folder ProductDetail
 import CartPage from './pages/CartPage/CartPage'; // Thêm dòng này
 import PaymentSuccess from './pages/PaymentSuccess/PaymentSuccess'; // Thêm dòng này
+import OrderHistory from './pages/OrderHistory/OrderHistory';
 function App() {
   return (
     <Router>
@@ -44,6 +45,15 @@ function App() {
             element={
               <PrivateRoute>
                 <Profile />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="order-history"
+            element={
+              <PrivateRoute>
+                <OrderHistory />
               </PrivateRoute>
             }
           />

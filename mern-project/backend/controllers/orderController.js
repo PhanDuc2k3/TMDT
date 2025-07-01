@@ -28,12 +28,18 @@ const createOrder = async (req, res) => {
 const getMyOrders = async (req, res) => {
   try {
     const orders = await Order.find({ userId: req.user.id }).sort({ createdAt: -1 });
+
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ message: 'Không có đơn hàng nào' });
+    }
+
     res.json(orders);
   } catch (err) {
-    console.error('Lỗi lấy đơn hàng:', err);
+    console.error('Lỗi khi lấy đơn hàng:', err);
     res.status(500).json({ message: 'Không thể lấy đơn hàng' });
   }
 };
+
 
 // Lấy chi tiết đơn hàng
 const getOrderById = async (req, res) => {
@@ -58,29 +64,47 @@ const getOrderById = async (req, res) => {
 // Cập nhật trạng thái đơn hàng khi nhận callback từ Momo
 const updateOrderStatus = async (req, res) => {
   try {
-    const { orderId, resultCode } = req.body;
+    const { orderId, resultCode, amount, message, transId, payType } = req.body; // Lấy thông tin từ Momo
 
+    // Kiểm tra nếu thiếu thông tin
     if (!orderId || typeof resultCode === 'undefined') {
       return res.status(400).json({ message: 'Thiếu thông tin cần thiết' });
     }
 
+    // Tìm đơn hàng trong cơ sở dữ liệu
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
     }
 
-    if (resultCode == 0) {
-      order.status = 'Đã thanh toán';
-      await order.save();
-      return res.json({ message: 'Cập nhật trạng thái đơn hàng thành công' });
+    // Cập nhật thông tin giao dịch Momo vào đơn hàng
+    order.momoTransactionId = transId;
+    order.momoPayType = payType;
+    order.momoResultCode = resultCode;
+    order.momoMessage = message;
+    order.momoAmount = amount;
+    order.momoCreatedAt = new Date();  // Hoặc có thể lấy từ tham số trong callback nếu Momo trả về
+
+    // Cập nhật trạng thái đơn hàng
+    if (resultCode === '0') {
+      order.status = 'Đã thanh toán';  // Nếu thanh toán thành công
     } else {
-      return res.json({ message: 'Thanh toán thất bại, trạng thái đơn không thay đổi' });
+      order.status = 'Thanh toán thất bại';  // Nếu thanh toán thất bại
     }
+
+    // Lưu thay đổi
+    await order.save();
+
+    return res.json({ message: 'Cập nhật trạng thái đơn hàng thành công' });
+
   } catch (err) {
-    console.error('Lỗi cập nhật trạng thái:', err);
-    res.status(500).json({ message: 'Lỗi máy chủ' });
+    console.error('Lỗi khi cập nhật trạng thái:', err);
+    return res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };
+
+
+
 
 module.exports = {
   createOrder,

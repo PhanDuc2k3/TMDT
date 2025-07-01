@@ -1,0 +1,55 @@
+.paymentContainer {
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.successTitle {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #28a745;
+    text-align: center;
+}
+
+.orderDetailsTitle {
+    font-size: 1.5rem;
+    color: #333;
+    margin-top: 1.5rem;
+}
+
+.orderList {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+.orderItem {
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.noItemsMessage {
+    font-size: 1rem;
+    color: #888;
+}
+
+.total {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #e74c3c;
+    margin-top: 1.5rem;
+}
+
+.thankYouMessage {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #555;
+    margin-top: 1rem;
+    text-align: center;
+}

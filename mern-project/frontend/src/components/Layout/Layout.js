@@ -38,9 +38,10 @@ const Layout = () => {
   }, [location.pathname]);
 
   const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    setUser(null);
-    navigate('/login');
+    localStorage.removeItem('accessToken'); // Xóa token khi đăng xuất
+    localStorage.removeItem('cart'); // Xóa giỏ hàng khi đăng xuất
+    setUser(null); // Đặt lại trạng thái người dùng
+    navigate('/login'); // Điều hướng người dùng đến trang đăng nhập
   };
 
   return (
@@ -99,6 +100,7 @@ const Layout = () => {
                     {user.role === 'seller' && (
                       <Link to="/my-store" className={styles.dropdownItem}>Gian hàng của bạn</Link>
                     )}
+                    <Link to="/order-history" className={styles.dropdownItem}>Lịch sử mua hàng</Link> {/* Thêm liên kết lịch sử mua hàng */}
                     <button onClick={handleLogout} className={styles.dropdownItem}>Đăng xuất</button>
                   </div>
                 )}

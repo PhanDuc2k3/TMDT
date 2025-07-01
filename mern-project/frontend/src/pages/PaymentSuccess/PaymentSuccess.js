@@ -1,38 +1,41 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import axios from '../../api/axios';  // Đảm bảo axios được cấu hình đúng
 
 const PaymentSuccess = () => {
-  const [orderItems, setOrderItems] = useState([]);
-  const [total, setTotal] = useState(0);
-
   useEffect(() => {
-    const savedOrder = sessionStorage.getItem('recentOrder');
-    if (savedOrder) {
-      const items = JSON.parse(savedOrder);
-      setOrderItems(items);
+    const params = new URLSearchParams(window.location.search);  // Lấy query params từ URL
+    const orderId = params.get('orderId');
+    const resultCode = params.get('resultCode');  // Kết quả thanh toán từ Momo (0: thành công, khác 0: thất bại)
 
-      const sum = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-      setTotal(sum);
+    // Lấy token từ localStorage hoặc cookie
+    const token = localStorage.getItem('accessToken');  // Hoặc lấy từ cookie nếu sử dụng cookie
+
+    if (orderId && resultCode && token) {
+      // Gửi yêu cầu cập nhật trạng thái đơn hàng
+      axios
+        .post('/order/update-status', {
+          orderId: orderId,
+          resultCode: resultCode,  // Giả sử resultCode là thông tin từ Momo
+        }, {
+          headers: {
+            Authorization: `Bearer ${token}`,  // Gửi token trong header (nếu có)
+          },
+        })
+        .then((response) => {
+          console.log('Cập nhật trạng thái đơn hàng:', response.data);
+        })
+        .catch((err) => {
+          console.error('Lỗi khi cập nhật trạng thái:', err.response ? err.response.data : err.message);
+        });
+    } else {
+      console.log('Token không tồn tại hoặc thiếu dữ liệu yêu cầu');
     }
   }, []);
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div>
       <h2>🎉 Thanh toán thành công!</h2>
-      <h3>🧾 Chi tiết đơn hàng:</h3>
-      {orderItems.length > 0 ? (
-        <ul>
-          {orderItems.map((item, idx) => (
-            <li key={idx}>
-              {item.name} - {item.quantity} x {item.price.toLocaleString()}₫
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>Không có sản phẩm trong đơn hàng.</p>
-      )}
-
-      <h3>Tổng tiền: {total.toLocaleString()}₫</h3>
-      <p>Cảm ơn bạn đã mua sắm!</p>
+      <p>Đơn hàng của bạn đã được xử lý.</p>
     </div>
   );
 };

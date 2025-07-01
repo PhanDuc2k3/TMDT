@@ -12,7 +12,10 @@ router.get('/my-orders', verifyToken, orderController.getMyOrders);
 // Lấy chi tiết đơn hàng theo orderId
 router.get('/:orderId', verifyToken, orderController.getOrderById);
 
+// // Nhận callback từ Momo cập nhật trạng thái đơn hàng
+// router.post('/update-status', orderController.updateOrderStatus);
+
 // Nhận callback từ Momo cập nhật trạng thái đơn hàng
-router.post('/update-status', orderController.updateOrderStatus);
+router.post('/update-status', verifyToken, orderController.updateOrderStatus);
 
 module.exports = router;
