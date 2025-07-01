@@ -1,0 +1,54 @@
+.orderHistory {
+    padding: 2rem;
+    background-color: #f9f9f9;
+
+    h2 {
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+        color: #333;
+    }
+
+    .error {
+        color: red;
+        font-weight: bold;
+    }
+
+    ul {
+        list-style: none;
+        padding: 0;
+
+        >li {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            padding: 1.2rem;
+
+            h4 {
+                margin: 0 0 0.5rem;
+                font-size: 1.2rem;
+                color: #444;
+            }
+
+            p {
+                margin: 0.2rem 0;
+                color: #666;
+            }
+
+            ul {
+                margin-top: 0.8rem;
+                padding-left: 1rem;
+
+                li {
+                    font-size: 0.95rem;
+                    color: #555;
+                }
+            }
+        }
+    }
+
+    .empty {
+        font-style: italic;
+        color: #999;
+    }
+}

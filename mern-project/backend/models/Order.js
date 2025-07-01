@@ -5,20 +5,28 @@ const OrderSchema = new mongoose.Schema({
   items: [
     {
       productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+      store: { type: mongoose.Schema.Types.ObjectId, ref: 'Store', required: true }, // ⭐ Thêm store
       name: String,
       price: Number,
       quantity: Number,
     },
   ],
   totalAmount: Number,
-  status: { type: String, default: 'Chờ xử lý' }, // Có thể là: Chờ xử lý, Đã xác nhận, Đang giao, Hoàn thành, Hủy
+status: {
+  type: String,
+  default: 'Chờ xử lý',
+  enum: ['Chờ xử lý', 'Đã xác nhận', 'Đã thanh toán', 'Đang giao', 'Hoàn thành', 'Hủy']
+}
+,
   createdAt: { type: Date, default: Date.now },
-  momoTransactionId: { type: String },  // ID giao dịch của Momo
-  momoPayType: { type: String },        // Phương thức thanh toán
-  momoResultCode: { type: String },     // Mã kết quả từ Momo (0 là thành công)
-  momoMessage: { type: String },        // Thông điệp kết quả thanh toán
-  momoAmount: { type: Number },         // Số tiền thanh toán
-  momoCreatedAt: { type: Date },        // Thời gian tạo giao dịch
+
+  // Momo Payment Fields
+  momoTransactionId: { type: String },
+  momoPayType: { type: String },
+  momoResultCode: { type: String },
+  momoMessage: { type: String },
+  momoAmount: { type: Number },
+  momoCreatedAt: { type: Date },
 });
 
 module.exports = mongoose.model('Order', OrderSchema);

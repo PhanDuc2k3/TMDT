@@ -1,35 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import axios from '../../api/axios'; // Import axios instance
+import axios from '../../api/axios';
+import styles from './OrderHistory.module.scss';
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
-  const [error, setError] = useState(null); // To handle errors
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken'); // Get token from localStorage
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       console.log('No token found, user might not be logged in.');
       return;
     }
 
-    // Fetch order data from the API
-    axios.get('/order/my-orders', { // Đổi thành '/my-orders' để trùng với backend
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    axios.get('/order/my-orders', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
       .then((res) => {
-        console.log('Orders fetched:', res.data);
         setOrders(res.data);
       })
       .catch((err) => {
-        console.error('Lỗi khi lấy lịch sử đơn hàng:', err.response ? err.response.data : err.message);
+        setError('Không thể tải lịch sử đơn hàng.');
+        console.error('Lỗi:', err.response ? err.response.data : err.message);
       });
-      
   }, []);
 
   return (
-    <div>
+    <div className={styles.orderHistory}>
       <h2>📜 Lịch sử mua hàng</h2>
-      {error && <p>{error}</p>} {/* Show error message if any */}
+      {error && <p className={styles.error}>{error}</p>}
       {orders.length > 0 ? (
         <ul>
           {orders.map((order, idx) => (
@@ -49,7 +48,7 @@ const OrderHistory = () => {
           ))}
         </ul>
       ) : (
-        <p>Chưa có đơn hàng nào.</p>
+        <p className={styles.empty}>Chưa có đơn hàng nào.</p>
       )}
     </div>
   );

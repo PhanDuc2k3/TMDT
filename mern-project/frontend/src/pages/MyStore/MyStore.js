@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from '../../api/axios';
 import { useNavigate } from 'react-router-dom';
 import styles from './MyStore.module.scss';
+import RevenueStats from './RevenueStats'; // ✅ Import doanh thu
 
 const MyStore = () => {
   const [products, setProducts] = useState([]);
@@ -124,6 +125,10 @@ const MyStore = () => {
     <div className={styles.myStore}>
       <h2>Gian hàng của bạn</h2>
 
+      {/* ✅ Phần thống kê doanh thu */}
+      <RevenueStats />
+
+      {/* Form thêm/sửa sản phẩm */}
       <div className={styles.form}>
         <input name="name" placeholder="Tên sản phẩm" value={form.name} onChange={handleChange} />
         <input name="price" placeholder="Giá gốc" value={form.price} onChange={handleChange} />
@@ -144,6 +149,7 @@ const MyStore = () => {
         )}
       </div>
 
+      {/* Danh sách sản phẩm */}
       <div className={styles.productList}>
         {products.length === 0 ? (
           <p>Chưa có sản phẩm nào.</p>
@@ -160,10 +166,9 @@ const MyStore = () => {
                 <p><strong>Số lượng còn:</strong> {p.quantity}</p>
                 <p>{p.description}</p>
                 <div className={styles.actionButtons}>
-  <button className={styles.editBtn} onClick={() => startEdit(p)}>Sửa</button>
-  <button className={styles.deleteBtn} onClick={() => handleDelete(p._id)}>Xóa</button>
-</div>
-
+                  <button className={styles.editBtn} onClick={() => startEdit(p)}>Sửa</button>
+                  <button className={styles.deleteBtn} onClick={() => handleDelete(p._id)}>Xóa</button>
+                </div>
               </div>
             </div>
           ))

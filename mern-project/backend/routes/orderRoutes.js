@@ -8,6 +8,7 @@ router.post('/create', verifyToken, orderController.createOrder);
 
 // Lấy danh sách đơn của người dùng
 router.get('/my-orders', verifyToken, orderController.getMyOrders);
+router.get('/my-sales', verifyToken, orderController.getMySales);
 
 // Lấy chi tiết đơn hàng theo orderId
 router.get('/:orderId', verifyToken, orderController.getOrderById);

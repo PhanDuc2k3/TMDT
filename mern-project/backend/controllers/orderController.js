@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const Product = require('../models/Product');
 
 // Tạo đơn hàng
 const createOrder = async (req, res) => {
@@ -9,9 +10,25 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ message: 'Giỏ hàng trống.' });
     }
 
+    // Duyệt qua từng item để gán thêm trường "store"
+    const enrichedItems = await Promise.all(
+      items.map(async (item) => {
+        const product = await Product.findById(item.productId);
+        if (!product) throw new Error(`Không tìm thấy sản phẩm với ID: ${item.productId}`);
+
+        return {
+          productId: product._id,
+          store: product.store, // ⭐ Gán store từ product
+          name: product.name,
+          price: item.price,
+          quantity: item.quantity
+        };
+      })
+    );
+
     const order = new Order({
       userId: req.user.id,
-      items,
+      items: enrichedItems,
       totalAmount,
     });
 
@@ -23,7 +40,6 @@ const createOrder = async (req, res) => {
     res.status(500).json({ message: 'Đặt hàng thất bại!' });
   }
 };
-
 // Lấy danh sách đơn hàng của người dùng
 const getMyOrders = async (req, res) => {
   try {
@@ -102,6 +118,52 @@ const updateOrderStatus = async (req, res) => {
     return res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };
+const Store = require('../models/Store');
+const mongoose = require('mongoose');
+
+const getMySales = async (req, res) => {
+  try {
+    // Tìm store của seller đang đăng nhập
+    const store = await Store.findOne({ owner: req.user.id });
+    if (!store) return res.status(404).json({ message: 'Bạn chưa có gian hàng' });
+
+    const storeId = new mongoose.Types.ObjectId(store._id);
+
+    const result = await Order.aggregate([
+      { $unwind: '$items' },
+      { $match: { 'items.store': storeId } },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: {
+            $sum: { $multiply: ['$items.price', '$items.quantity'] }
+          },
+          totalProductsSold: { $sum: '$items.quantity' },
+          totalOrdersSet: { $addToSet: '$_id' }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          totalRevenue: 1,
+          totalProductsSold: 1,
+          totalOrders: { $size: '$totalOrdersSet' }
+        }
+      }
+    ]);
+
+    const stats = result[0] || {
+      totalRevenue: 0,
+      totalProductsSold: 0,
+      totalOrders: 0
+    };
+
+    res.json(stats);
+  } catch (err) {
+    console.error('Lỗi thống kê doanh thu:', err);
+    res.status(500).json({ message: 'Không thể lấy doanh thu' });
+  }
+};
 
 
 
@@ -111,4 +173,5 @@ module.exports = {
   getMyOrders,
   getOrderById,
   updateOrderStatus,
+  getMySales
 };
