@@ -15,7 +15,7 @@ import CartPage from './pages/CartPage/CartPage'; // Thêm dòng này
 import PaymentSuccess from './pages/PaymentSuccess/PaymentSuccess'; // Thêm dòng này
 import OrderHistory from './pages/OrderHistory/OrderHistory';
 import RevenueStats from './pages/MyStore/RevenueStats'; // Thêm dòng này
-
+import Message from './pages/Message/Messages'; // Thêm dòng này
 function App() {
   return (
     <Router>
@@ -33,7 +33,16 @@ function App() {
           <Route path="/product/:productId" element={<ProductDetail />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/revenue-stats" element={<RevenueStats />} />
-
+    
+          {/* Trang tin nhắn */}
+          {/* <Route
+            path="/messages"
+            element={
+              <PrivateRoute>
+                <Message />
+              </PrivateRoute>
+            }
+          /> */}
           {/* Trang giỏ hàng (yêu cầu đăng nhập) */}
           <Route
             path="cart"

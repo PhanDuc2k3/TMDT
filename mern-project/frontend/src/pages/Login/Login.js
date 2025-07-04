@@ -15,8 +15,10 @@ const Login = () => {
     try {
       const res = await axios.post('/auth/login', { email, password });
 
+      // ✅ Lưu thông tin user và token vào localStorage
       localStorage.setItem('accessToken', res.data.accessToken);
       localStorage.setItem('role', res.data.user.role);
+      localStorage.setItem('user', JSON.stringify(res.data.user)); // ✅ THÊM DÒNG NÀY
 
       setMessage('Đăng nhập thành công!');
 
