@@ -35,14 +35,14 @@ function App() {
           <Route path="/revenue-stats" element={<RevenueStats />} />
     
           {/* Trang tin nhắn */}
-          {/* <Route
+          <Route
             path="/messages"
             element={
               <PrivateRoute>
                 <Message />
               </PrivateRoute>
             }
-          /> */}
+          />
           {/* Trang giỏ hàng (yêu cầu đăng nhập) */}
           <Route
             path="cart"

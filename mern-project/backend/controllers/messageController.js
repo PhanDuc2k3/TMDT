@@ -1,17 +1,21 @@
 const Message = require('../models/Message');
+const User = require('../models/User');
+const mongoose = require('mongoose');
 
-// Lấy tất cả tin nhắn của người dùng
+// Lấy tất cả tin nhắn giữa user hiện tại và các người khác
 exports.getMessages = async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.user?.id;
 
-    if (!userId) {
-      return res.status(400).json({ message: 'User ID is required' });
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid or missing user ID' });
     }
 
-    // Truy vấn tin nhắn của người dùng (gửi hoặc nhận)
     const messages = await Message.find({
-      $or: [{ senderId: userId }, { receiverId: userId }]
+      $or: [
+        { senderId: userId },
+        { receiverId: userId }
+      ]
     }).sort({ timestamp: 1 });
 
     res.status(200).json(messages);
@@ -26,18 +30,14 @@ exports.sendMessage = async (req, res) => {
   try {
     const { senderId, receiverId, content, conversationId } = req.body;
 
-    // Kiểm tra xem các dữ liệu có hợp lệ không
     if (!senderId || !receiverId || !content) {
       return res.status(400).json({ message: 'Sender ID, Receiver ID, and content are required' });
     }
 
     const newMessage = new Message({ senderId, receiverId, content, conversationId });
-
-    // Lưu tin nhắn vào DB
     await newMessage.save();
 
-    // Phát sự kiện Socket.io để thông báo tin nhắn mới
-    req.io.to(receiverId).emit('newMessage', newMessage);
+    req.io?.to(receiverId).emit('newMessage', newMessage);
 
     res.status(200).json(newMessage);
   } catch (err) {
@@ -51,15 +51,13 @@ exports.getUnreadMessages = async (req, res) => {
   try {
     const userId = req.params.userId;
 
-    // Kiểm tra xem userId có hợp lệ không
     if (!userId || userId === 'undefined') {
       return res.status(400).json({ message: 'User ID is required' });
     }
 
-    // Truy vấn số lượng tin nhắn chưa đọc
     const unreadCount = await Message.countDocuments({
       receiverId: userId,
-      readStatus: false,  // Chỉ lấy tin nhắn chưa đọc
+      readStatus: false,
     });
 
     res.status(200).json({ unreadCount });
@@ -74,7 +72,6 @@ exports.markAsRead = async (req, res) => {
   try {
     const { messageId } = req.body;
 
-    // Kiểm tra xem messageId có hợp lệ không
     if (!messageId) {
       return res.status(400).json({ message: 'Message ID is required' });
     }
@@ -82,7 +79,7 @@ exports.markAsRead = async (req, res) => {
     const updatedMessage = await Message.findByIdAndUpdate(
       messageId,
       { readStatus: true },
-      { new: true }  // Trả về đối tượng đã được cập nhật
+      { new: true }
     );
 
     if (!updatedMessage) {
@@ -93,5 +90,50 @@ exports.markAsRead = async (req, res) => {
   } catch (err) {
     console.error('Error marking message as read:', err);
     res.status(500).json({ message: 'Error marking message as read', error: err.message });
+  }
+};
+
+// Lấy danh sách người dùng đã từng nhắn tin với user hiện tại
+exports.getConversations = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
+
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+
+    const messages = await Message.find({
+      $or: [
+        { senderId: userObjectId },
+        { receiverId: userObjectId }
+      ]
+    }).sort({ timestamp: -1 });
+
+    const conversationMap = new Map();
+
+    for (const msg of messages) {
+      const otherUserId = msg.senderId.equals(userObjectId)
+        ? msg.receiverId.toString()
+        : msg.senderId.toString();
+
+      if (!conversationMap.has(otherUserId)) {
+        const user = await User.findById(otherUserId).select('fullName avatar');
+        if (user) {
+          conversationMap.set(otherUserId, {
+            _id: user._id,
+            fullName: user.fullName,
+            avatar: user.avatar,
+            lastMessage: msg.content,
+            timestamp: msg.timestamp,
+          });
+        }
+      }
+    }
+
+    res.json([...conversationMap.values()]);
+  } catch (err) {
+    console.error('Error fetching conversations:', err);
+    res.status(500).json({ message: 'Error fetching conversations', error: err.message });
   }
 };

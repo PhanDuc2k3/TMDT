@@ -2,60 +2,70 @@ const mongoose = require('mongoose');
 const Message = require('./models/Message');
 
 module.exports = (io) => {
-  const userSockets = {}; // Object lưu socket theo shopId
+  const userSockets = {}; // Object lưu socket theo userId
 
   io.on('connection', (socket) => {
-    console.log('A user connected', socket.id);
+    console.log('✅ A user connected:', socket.id);
 
-    socket.on('joinRoom', (shopId) => {
-      socket.join(shopId);
-      console.log(`User ${socket.id} joined room ${shopId}`);
+    // Khi client join vào phòng theo userId
+    socket.on('joinRoom', (userId) => {
+      socket.join(userId);
+      console.log(`➡️ Socket ${socket.id} joined room ${userId}`);
 
-      if (!userSockets[shopId]) {
-        userSockets[shopId] = [];
+      if (!userSockets[userId]) {
+        userSockets[userId] = [];
       }
-      userSockets[shopId].push(socket.id);
+      userSockets[userId].push(socket.id);
     });
 
+    // Gửi và lưu tin nhắn
     socket.on('sendMessage', async (messageData) => {
-      console.log('Sending message:', messageData);
+      console.log('📩 Client gửi tin nhắn:', messageData);
 
-      if (!messageData.senderId || !messageData.receiverId) {
-        console.error('Invalid sender or receiver:', messageData.senderId, messageData.receiverId);
+      const { senderId, receiverId, content, timestamp } = messageData;
+
+      // Kiểm tra sender/receiver hợp lệ
+      if (!senderId || !receiverId || !content) {
+        console.error('❌ Thiếu senderId, receiverId hoặc content');
         return;
       }
 
       try {
-        if (typeof messageData.receiverId === 'string') {
-          if (mongoose.isValidObjectId(messageData.receiverId)) {
-            messageData.receiverId = mongoose.Types.ObjectId.createFromHexString(messageData.receiverId);
-          } else {
-            console.error('Invalid receiverId:', messageData.receiverId);
-            return;
-          }
+        const sender = mongoose.Types.ObjectId.isValid(senderId)
+          ? new mongoose.Types.ObjectId(senderId)
+          : null;
+
+        const receiver = mongoose.Types.ObjectId.isValid(receiverId)
+          ? new mongoose.Types.ObjectId(receiverId)
+          : null;
+
+        if (!sender || !receiver) {
+          console.error('❌ senderId hoặc receiverId không hợp lệ');
+          return;
         }
 
         const newMessage = new Message({
-          senderId: messageData.senderId,
-          receiverId: messageData.receiverId,
-          content: messageData.content,
-          timestamp: messageData.timestamp,
+          senderId: sender,
+          receiverId: receiver,
+          content,
+          timestamp: timestamp || new Date(),
         });
 
         await newMessage.save();
 
-        io.to(messageData.receiverId.toString()).emit('newMessage', newMessage);
-        console.log('Message saved and emitted to receiver:', newMessage);
+        io.to(receiver.toString()).emit('newMessage', newMessage);
+        console.log('✅ Tin nhắn đã lưu và gửi đến người nhận:', newMessage);
       } catch (err) {
-        console.error('Error saving message:', err);
-        socket.emit('messageError', 'Error saving your message. Please try again.');
+        console.error('❌ Lỗi khi lưu tin nhắn:', err);
+        socket.emit('messageError', 'Không thể gửi tin nhắn, hãy thử lại');
       }
     });
 
+    // Khi user disconnect
     socket.on('disconnect', () => {
-      console.log('User disconnected', socket.id);
-      for (const shopId in userSockets) {
-        userSockets[shopId] = userSockets[shopId].filter((socketId) => socketId !== socket.id);
+      console.log('❎ User disconnected', socket.id);
+      for (const userId in userSockets) {
+        userSockets[userId] = userSockets[userId].filter(id => id !== socket.id);
       }
     });
   });
