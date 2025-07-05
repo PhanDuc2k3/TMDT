@@ -39,7 +39,6 @@ const ShopDetail = () => {
   return (
     <div>
       {shop && <ShopDetailContent shopId={shopId} />}
-      {shop && <ChatSection shopId={shopId} shop={shop} />}
     </div>
   );
 };

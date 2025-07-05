@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from '../../api/axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // thêm useNavigate
 import styles from './ShopDetailContent.module.scss';
 
 const ShopDetailContent = ({ shopId }) => {
@@ -10,6 +10,7 @@ const ShopDetailContent = ({ shopId }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate(); // dùng để chuyển trang khi nhấn "Nhắn tin"
 
   useEffect(() => {
     const fetchShopAndProducts = async () => {
@@ -36,6 +37,12 @@ const ShopDetailContent = ({ shopId }) => {
     }
   }, [shopId]);
 
+  const handleMessageClick = () => {
+    if (shop?.owner) {
+      navigate('/messages', { state: { selectedUser: shop.owner } });
+    }
+  };
+
   if (loading) return <p>🔄 Đang tải dữ liệu gian hàng...</p>;
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
   if (!shop) return <p>❌ Không tìm thấy gian hàng.</p>;
@@ -53,6 +60,11 @@ const ShopDetailContent = ({ shopId }) => {
           <p><strong>Mô tả:</strong> {shop.description}</p>
           <p><strong>Địa điểm:</strong> {shop.location}</p>
           <p><strong>Đánh giá:</strong> {shop.rating} / 5</p>
+
+          {/* ✅ Nút nhắn tin */}
+          <button onClick={handleMessageClick} className={styles.messageButton}>
+            💬 Nhắn tin
+          </button>
         </div>
       </div>
 

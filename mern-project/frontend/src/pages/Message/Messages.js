@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from '../../api/axios';
 import io from 'socket.io-client';
 import styles from './Messages.module.scss';
@@ -6,6 +7,7 @@ import styles from './Messages.module.scss';
 const socket = io('http://localhost:5000', { path: '/api/socket' });
 
 const MessagePage = () => {
+  const location = useLocation();
   const [conversations, setConversations] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -23,6 +25,24 @@ const MessagePage = () => {
       }
     }
   }, []);
+
+  // ✅ Nhận selectedUser từ location.state
+  useEffect(() => {
+    if (location.state?.selectedUser) {
+      const u = location.state.selectedUser;
+
+      if (typeof u === 'string') {
+        // Trường hợp chỉ truyền ID
+        setSelectedUser({ _id: u });
+      } else {
+        // Trường hợp object
+        setSelectedUser({
+          ...u,
+          _id: u._id || u.id,
+        });
+      }
+    }
+  }, [location.state]);
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -49,17 +69,21 @@ const MessagePage = () => {
 
     const fetchMessages = async () => {
       try {
-        const res = await axios.get(`/messages`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          
+        const res = await axios.get('/messages', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-        const userId = user._id.toString();
-        const otherId = selectedUser._id.toString();
+        const userId = String(user._id);
+        const otherId = String(selectedUser._id);
+
+        console.log('🔍 Fetching messages for:', { userId, otherId, selectedUser });
 
         const filtered = res.data.filter((msg) => {
-          const sender = msg.senderId?.toString?.() || msg.senderId;
-          const receiver = msg.receiverId?.toString?.() || msg.receiverId;
+          if (!msg.senderId || !msg.receiverId) return false;
+
+          const sender = String(msg.senderId);
+          const receiver = String(msg.receiverId);
+
           return (
             (sender === userId && receiver === otherId) ||
             (receiver === userId && sender === otherId)
@@ -67,7 +91,10 @@ const MessagePage = () => {
         });
 
         setMessages(filtered);
-        socket.emit('joinRoom', selectedUser._id);
+
+        if (selectedUser._id) {
+          socket.emit('joinRoom', selectedUser._id);
+        }
       } catch (err) {
         console.error('Lỗi khi lấy messages:', err.response?.data || err.message);
       }
@@ -77,17 +104,16 @@ const MessagePage = () => {
   }, [selectedUser, user]);
 
   useEffect(() => {
-    if (!user) return;
-  
-    socket.emit('joinRoom', user._id); // ✅ join phòng cá nhân
-  
+    if (user?._id) {
+      socket.emit('joinRoom', user._id);
+    }
+
     socket.on('newMessage', (msg) => {
-      const sender = msg.senderId?.toString?.() || msg.senderId;
-      const receiver = msg.receiverId?.toString?.() || msg.receiverId;
-  
-      const currentUserId = user._id?.toString();
-      const selectedId = selectedUser?._id?.toString();
-  
+      const sender = msg.senderId ? String(msg.senderId) : '';
+      const receiver = msg.receiverId ? String(msg.receiverId) : '';
+      const currentUserId = String(user?._id);
+      const selectedId = selectedUser ? String(selectedUser._id) : '';
+
       if (
         selectedUser &&
         ((sender === currentUserId && receiver === selectedId) ||
@@ -95,22 +121,20 @@ const MessagePage = () => {
       ) {
         setMessages((prev) => [...prev, msg]);
       }
-  
-      // ✅ Nếu chưa mở khung chat với người gửi, có thể cập nhật cuộc hội thoại
     });
-  
+
     return () => {
       socket.off('newMessage');
     };
   }, [user, selectedUser]);
-  
+
   const handleSendMessage = () => {
-    if (!newMessage.trim() || !user || !selectedUser) return;
+    if (!newMessage.trim() || !user?._id || !selectedUser?._id) return;
 
     const msg = {
-      senderId: user.id || user._id,
+      senderId: user._id,
       receiverId: selectedUser._id,
-      content: newMessage,
+      content: newMessage.trim(),
       timestamp: new Date().toISOString(),
     };
 
@@ -129,9 +153,10 @@ const MessagePage = () => {
               className={`${styles.conversationItem} ${
                 selectedUser?._id === u._id ? styles.active : ''
               }`}
-              onClick={() => {
-                setSelectedUser(u);
-              }}
+              onClick={() => setSelectedUser({
+                ...u,
+                _id: u._id || u.id,
+              })}
             >
               <img
                 src={u.avatar || '/default-avatar.png'}
@@ -150,21 +175,33 @@ const MessagePage = () => {
       <div className={styles.chatArea}>
         {selectedUser ? (
           <>
-            <div className={styles.chatHeader}>Đang trò chuyện với: {selectedUser.fullName}</div>
+            <div className={styles.chatHeader}>
+              Đang trò chuyện với: {selectedUser.fullName || 'Người dùng'}
+            </div>
             <div className={styles.chatWindow}>
-              {messages.map((msg, index) => (
-                <div
-                  key={index}
-                  className={`${
-                    (msg.senderId?.toString?.() || msg.senderId) === user._id
-                      ? styles.userMessage
-                      : styles.shopMessage
-                  }`}
-                >
-                  <p>{msg.content}</p>
-                  <span className={styles.timestamp}>{new Date(msg.timestamp).toLocaleString()}</span>
-                </div>
-              ))}
+              {messages.length === 0 ? (
+                <p className={styles.noMessage}>
+                  Chưa có tin nhắn nào với người này.
+                </p>
+              ) : (
+                messages.map((msg, index) => {
+                  const sender = msg.senderId ? String(msg.senderId) : '';
+                  const isMyMessage = sender === String(user._id);
+                  return (
+                    <div
+                      key={index}
+                      className={
+                        isMyMessage ? styles.userMessage : styles.shopMessage
+                      }
+                    >
+                      <p>{msg.content}</p>
+                      <span className={styles.timestamp}>
+                        {new Date(msg.timestamp).toLocaleString()}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
             </div>
             <div className={styles.inputArea}>
               <textarea
