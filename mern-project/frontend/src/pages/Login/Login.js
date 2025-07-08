@@ -1,33 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../../api/axios';
-import styles from './Login.module.scss'; // ✅ SCSS module import
+import styles from './Login.module.scss';
+import { AuthContext } from '../../context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
+  const { setUser } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
+      // Gửi thông tin đăng nhập
       const res = await axios.post('/auth/login', { email, password });
+      console.log('✅ Login response:', res.data);
 
-      // ✅ Lưu thông tin user và token vào localStorage
-      localStorage.setItem('accessToken', res.data.accessToken);
-      localStorage.setItem('role', res.data.user.role);
-      localStorage.setItem('user', JSON.stringify(res.data.user)); // ✅ THÊM DÒNG NÀY
+      const token = res.data.accessToken;
+      localStorage.setItem('accessToken', token);
+      console.log('✅ Token saved to localStorage:', token);
+
+      // Lấy thông tin user đầy đủ
+      const profileRes = await axios.get('/user/profile', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log('✅ Full user profile:', profileRes.data);
+
+      // Cập nhật vào context
+      setUser(profileRes.data);
+      console.log('✅ setUser updated context');
 
       setMessage('Đăng nhập thành công!');
 
-      if (res.data.user.role === 'admin') {
+      // Điều hướng theo vai trò
+      if (profileRes.data.role === 'admin') {
         navigate('/admin');
       } else {
         navigate('/');
       }
     } catch (err) {
+      console.error('❌ Lỗi đăng nhập:', err.response?.data || err.message);
       setMessage(err.response?.data?.error || 'Lỗi đăng nhập');
     }
   };

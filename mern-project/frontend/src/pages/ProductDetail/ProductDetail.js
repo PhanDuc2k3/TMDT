@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useContext } from 'react';
+import { useParams } from 'react-router-dom';
 import axios from '../../api/axios';
 import { addToCart } from '../../utils/cart';
 import styles from './ProductDetail.module.scss';
+import { CartContext } from '../../context/CartContext'; // ✅ Thêm context
 
 const ProductDetail = () => {
   const { productId } = useParams();
@@ -10,8 +11,7 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [quantity, setQuantity] = useState(1);
-
-  const navigate = useNavigate();
+  const { updateCartCount } = useContext(CartContext); // ✅ Dùng context
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -36,8 +36,8 @@ const ProductDetail = () => {
   const handleAddToCart = () => {
     if (quantity <= 0) return alert('Số lượng phải lớn hơn 0');
     addToCart(product, quantity);
+    updateCartCount(); // ✅ cập nhật global ngay
     alert('✅ Đã thêm vào giỏ hàng!');
-    navigate('/cart'); // Có thể bỏ nếu bạn muốn chỉ ở lại trang chi tiết
   };
 
   if (loading) return <p>🔄 Đang tải dữ liệu sản phẩm...</p>;
