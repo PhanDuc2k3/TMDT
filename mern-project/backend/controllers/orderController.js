@@ -60,19 +60,30 @@ const getMyOrders = async (req, res) => {
 // Lấy chi tiết đơn hàng
 const getOrderById = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.orderId);
+    const order = await Order.findById(req.params.orderId)
+      .populate('items.productId'); // ✅ thêm dòng này
 
     if (!order) {
       return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
     }
 
-    if (order.userId.toString() !== req.user.id) {
-      return res.status(403).json({ message: 'Bạn không có quyền xem đơn này' });
+    const userId = String(req.user.id);
+    const role = req.user.role;
+    const storeId = req.user.storeId;
+
+    if (role === 'admin') return res.status(200).json(order);
+    if (String(order.userId) === userId) return res.status(200).json(order);
+
+    if (role === 'seller') {
+      const ownsProduct = order.items.some(
+        (item) => String(item.store) === storeId
+      );
+      if (ownsProduct) return res.status(200).json(order);
     }
 
-    res.json(order);
+    return res.status(403).json({ message: 'Bạn không có quyền xem đơn này' });
   } catch (err) {
-    console.error('Lỗi lấy chi tiết đơn hàng:', err);
+    console.error('Lỗi lấy đơn hàng:', err);
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };

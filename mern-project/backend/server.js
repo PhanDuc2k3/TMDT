@@ -9,6 +9,7 @@ const socketIo = require('socket.io');
 const app = express();
 dotenv.config();
 
+// Cấu hình CORS
 app.use(cors({
   origin: 'http://localhost:3000',
   credentials: true,
@@ -28,16 +29,20 @@ const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const paymentRoutes = require('./routes/payment');
 const messageRoutes = require('./routes/messageRoutes');
+const reviewRoutes = require('./routes/review'); // ✅ Thêm route đánh giá
 
-app.use('/api/admin', adminRoutes); 
-app.use('/api/store', storeRoutes); 
-app.use('/api/auth', authRoutes);   
+// Sử dụng routes
+app.use('/api/admin', adminRoutes);
+app.use('/api/store', storeRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/product', productRoutes);
 app.use('/api/order', orderRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/review', reviewRoutes); // ✅ Mount endpoint review
 
+// Route test
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
@@ -45,6 +50,7 @@ app.get('/', (req, res) => {
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 
+// Kết nối MongoDB và Socket.io
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('✅ MongoDB connected');
@@ -58,8 +64,7 @@ mongoose.connect(process.env.MONGO_URI)
       path: '/api/socket',
     });
 
-    // ✅ Gọi file socket.js
-    require('./socket')(io);
+    require('./socket')(io); // Gọi socket xử lý
 
     server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
