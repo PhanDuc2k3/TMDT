@@ -59,3 +59,21 @@ exports.createReview = async (req, res) => {
     res.status(500).json({ message: 'Lỗi khi gửi đánh giá' });
   }
 };
+exports.getReviewsByProduct = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const reviews = await Review.find({ product: productId })
+      .populate('user', 'fullName avatarUrl') // Populate cả fullName và avatarUrl
+      .exec();  // Thực thi truy vấn
+
+    if (!reviews || reviews.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy đánh giá cho sản phẩm này.' });
+    }
+
+    res.status(200).json(reviews);  // Trả về danh sách đánh giá có đầy đủ thông tin user
+  } catch (err) {
+    console.error('❌ Lỗi khi lấy đánh giá:', err);
+    res.status(500).json({ message: 'Lỗi khi lấy đánh giá sản phẩm' });
+  }
+};
+

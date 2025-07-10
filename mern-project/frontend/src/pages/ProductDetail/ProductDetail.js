@@ -3,7 +3,8 @@ import { useParams } from 'react-router-dom';
 import axios from '../../api/axios';
 import { addToCart } from '../../utils/cart';
 import styles from './ProductDetail.module.scss';
-import { CartContext } from '../../context/CartContext'; // ✅ Thêm context
+import { CartContext } from '../../context/CartContext';
+import ProductReviews from './ProductReviews';
 
 const ProductDetail = () => {
   const { productId } = useParams();
@@ -11,7 +12,8 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const { updateCartCount } = useContext(CartContext); // ✅ Dùng context
+
+  const { updateCartCount } = useContext(CartContext);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -36,7 +38,7 @@ const ProductDetail = () => {
   const handleAddToCart = () => {
     if (quantity <= 0) return alert('Số lượng phải lớn hơn 0');
     addToCart(product, quantity);
-    updateCartCount(); // ✅ cập nhật global ngay
+    updateCartCount();
     alert('✅ Đã thêm vào giỏ hàng!');
   };
 
@@ -45,6 +47,7 @@ const ProductDetail = () => {
   if (!product) return <p>❌ Không tìm thấy sản phẩm.</p>;
 
   return (
+    <div>
     <div className={styles.productDetailContainer}>
       <div className={styles.imageGallery}>
         {product.images?.map((img, index) => (
@@ -54,17 +57,12 @@ const ProductDetail = () => {
 
       <div className={styles.productInfo}>
         <h2>{product.name}</h2>
-
-        <p className={styles.priceOriginal}>
-          Giá gốc: {product.price.toLocaleString()}₫
-        </p>
-
+        <p className={styles.priceOriginal}>Giá gốc: {product.price.toLocaleString()}₫</p>
         {product.salePrice && (
           <p className={styles.priceSale}>
             Giá khuyến mãi: {product.salePrice.toLocaleString()}₫
           </p>
         )}
-
         <p><strong>Mô tả:</strong> {product.description}</p>
         <p><strong>Thương hiệu:</strong> {product.brand}</p>
         <p><strong>Phân loại:</strong> {product.subCategory}</p>
@@ -87,6 +85,9 @@ const ProductDetail = () => {
           </button>
         </div>
       </div>
+
+      </div>
+      <ProductReviews productId={productId} />
     </div>
   );
 };

@@ -97,6 +97,7 @@ exports.markAsRead = async (req, res) => {
 exports.getConversations = async (req, res) => {
   try {
     const userId = req.user?.id;
+
     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: 'Invalid user ID' });
     }
@@ -117,13 +118,22 @@ exports.getConversations = async (req, res) => {
         ? msg.receiverId.toString()
         : msg.senderId.toString();
 
+      // Nếu chưa có trong danh sách thì thêm
       if (!conversationMap.has(otherUserId)) {
-        const user = await User.findById(otherUserId).select('fullName avatar');
+        const user = await User.findById(otherUserId).select('fullName avatarUrl');
+
+        // 👉 Log để kiểm tra dữ liệu avatarUrl
+        console.log('📦 Found user in conversation:', {
+          _id: user?._id,
+          fullName: user?.fullName,
+          avatarUrl: user?.avatarUrl,
+        });
+
         if (user) {
           conversationMap.set(otherUserId, {
             _id: user._id,
             fullName: user.fullName,
-            avatar: user.avatar,
+            avatarUrl: user.avatarUrl || null, // fallback nếu thiếu
             lastMessage: msg.content,
             timestamp: msg.timestamp,
           });
@@ -131,9 +141,10 @@ exports.getConversations = async (req, res) => {
       }
     }
 
-    res.json([...conversationMap.values()]);
+    res.status(200).json([...conversationMap.values()]);
   } catch (err) {
-    console.error('Error fetching conversations:', err);
+    console.error('❌ Error fetching conversations:', err);
     res.status(500).json({ message: 'Error fetching conversations', error: err.message });
   }
 };
+

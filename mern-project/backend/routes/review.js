@@ -6,5 +6,6 @@ const authMiddleware = require('../middleware/authMiddleware'); // middleware ki
 
 // Route tạo mới đánh giá
 router.post('/', authMiddleware, reviewController.createReview);
+router.get('/product/:productId/reviews', reviewController.getReviewsByProduct);
 
 module.exports = router;

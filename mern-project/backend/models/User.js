@@ -6,8 +6,10 @@ const userSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   phone: { type: String },
   address: { type: String },
-  avatarUrl: { type: String }, // Thêm avatar vào đây
-
+  avatarUrl: {
+    type: String,
+    default: 'https://i.pinimg.com/736x/c6/e5/65/c6e56503cfdd87da299f72dc416023d4.jpg', // ✅ Đặt avatar mặc định
+  },
   role: {
     type: String,
     enum: ['buyer', 'seller', 'admin'],

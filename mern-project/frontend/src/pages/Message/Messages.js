@@ -14,54 +14,61 @@ const MessagePage = () => {
   const [newMessage, setNewMessage] = useState('');
   const [user, setUser] = useState(null);
 
+  // ✅ Lấy user từ localStorage
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
         const parsed = JSON.parse(storedUser);
-        setUser({ ...parsed, _id: parsed._id || parsed.id });
+        const id = parsed._id || parsed.id;
+
+        console.log('👤 User từ localStorage:', parsed);
+        console.log('🔍 Gán user._id là:', id);
+
+        setUser({ ...parsed, _id: id });
       } catch (e) {
-        console.error('Lỗi parse user từ localStorage:', e);
+        console.error('❌ Lỗi parse user từ localStorage:', e);
       }
     }
   }, []);
 
-  // ✅ Nhận selectedUser từ location.state
+  // ✅ Nếu selectedUser truyền qua location.state
   useEffect(() => {
     if (location.state?.selectedUser) {
       const u = location.state.selectedUser;
+      const selected = typeof u === 'string' ? { _id: u } : { ...u, _id: u._id || u.id };
 
-      if (typeof u === 'string') {
-        // Trường hợp chỉ truyền ID
-        setSelectedUser({ _id: u });
-      } else {
-        // Trường hợp object
-        setSelectedUser({
-          ...u,
-          _id: u._id || u.id,
-        });
-      }
+      console.log('👆 Người dùng được chọn từ location.state:', selected);
+
+      setSelectedUser(selected);
     }
   }, [location.state]);
 
+  // ✅ Lấy danh sách hội thoại
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
-    if (!token) return;
+    if (!token || !user?._id) return;
 
     const fetchConversations = async () => {
       try {
         const res = await axios.get('/messages/conversations', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setConversations(res.data);
+
+        const others = res.data.filter((c) => c._id !== user._id);
+
+        console.log('💬 Danh sách hội thoại (loại trừ bản thân):', others);
+
+        setConversations(others);
       } catch (err) {
-        console.error('Lỗi khi lấy conversations:', err.response?.data || err.message);
+        console.error('❌ Lỗi khi lấy conversations:', err.response?.data || err.message);
       }
     };
 
     fetchConversations();
-  }, []);
+  }, [user]);
 
+  // ✅ Lấy tin nhắn giữa 2 người dùng
   useEffect(() => {
     if (!selectedUser || !user) return;
 
@@ -76,19 +83,32 @@ const MessagePage = () => {
         const userId = String(user._id);
         const otherId = String(selectedUser._id);
 
-        console.log('🔍 Fetching messages for:', { userId, otherId, selectedUser });
+        console.log('🧍 userId (hiện tại):', userId);
+        console.log('👤 selectedUser._id:', otherId);
+        console.log('📨 Tất cả senderId:', res.data.map((m) => m.senderId));
+        console.log('📨 Tất cả receiverId:', res.data.map((m) => m.receiverId));
 
         const filtered = res.data.filter((msg) => {
-          if (!msg.senderId || !msg.receiverId) return false;
-
           const sender = String(msg.senderId);
           const receiver = String(msg.receiverId);
 
-          return (
+          const match =
             (sender === userId && receiver === otherId) ||
-            (receiver === userId && sender === otherId)
-          );
+            (receiver === userId && sender === otherId);
+
+          if (match) {
+            console.log('✅ Tin nhắn phù hợp:', {
+              sender,
+              receiver,
+              content: msg.content,
+              timestamp: msg.timestamp,
+            });
+          }
+
+          return match;
         });
+
+        console.log('✅ Danh sách tin nhắn đã lọc:', filtered);
 
         setMessages(filtered);
 
@@ -96,23 +116,24 @@ const MessagePage = () => {
           socket.emit('joinRoom', selectedUser._id);
         }
       } catch (err) {
-        console.error('Lỗi khi lấy messages:', err.response?.data || err.message);
+        console.error('❌ Lỗi khi lấy messages:', err.response?.data || err.message);
       }
     };
 
     fetchMessages();
   }, [selectedUser, user]);
 
+  // ✅ Lắng nghe tin nhắn mới
   useEffect(() => {
     if (user?._id) {
       socket.emit('joinRoom', user._id);
     }
 
     socket.on('newMessage', (msg) => {
-      const sender = msg.senderId ? String(msg.senderId) : '';
-      const receiver = msg.receiverId ? String(msg.receiverId) : '';
+      const sender = String(msg.senderId);
+      const receiver = String(msg.receiverId);
       const currentUserId = String(user?._id);
-      const selectedId = selectedUser ? String(selectedUser._id) : '';
+      const selectedId = String(selectedUser?._id);
 
       if (
         selectedUser &&
@@ -153,13 +174,13 @@ const MessagePage = () => {
               className={`${styles.conversationItem} ${
                 selectedUser?._id === u._id ? styles.active : ''
               }`}
-              onClick={() => setSelectedUser({
-                ...u,
-                _id: u._id || u.id,
-              })}
+              onClick={() => {
+                console.log('🖱️ Đã chọn người dùng:', u);
+                setSelectedUser({ ...u, _id: u._id || u.id });
+              }}
             >
               <img
-                src={u.avatar || '/default-avatar.png'}
+                src={u.avatarUrl || '/default-avatar.png'}
                 alt={u.fullName}
                 className={styles.shopLogo}
               />
@@ -185,8 +206,7 @@ const MessagePage = () => {
                 </p>
               ) : (
                 messages.map((msg, index) => {
-                  const sender = msg.senderId ? String(msg.senderId) : '';
-                  const isMyMessage = sender === String(user._id);
+                  const isMyMessage = String(msg.senderId) === String(user._id);
                   return (
                     <div
                       key={index}
